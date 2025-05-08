@@ -1,0 +1,111 @@
+/* donations.global.css */
+/* ===== ESTILOS GLOBAIS PARA DOAÇÕES ===== */
+
+/* Importação de fonte (apenas uma vez) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* Camada base */
+@layer base {
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* Camada de componentes */
+@layer components {
+  /* Container principal para todas páginas */
+  .donation-page {
+    @apply bg-white text-gray-800 w-full overflow-x-hidden;
+  }
+
+  /* Header de doação (compartilhado) */
+  .donation-header {
+    @apply text-center py-16 px-8 bg-gradient-to-r from-red-800/85 to-red-700/85 text-white w-full;
+  }
+
+  .header-content {
+    @apply w-full max-w-6xl mx-auto;
+  }
+
+  .donation-header h1 {
+    @apply text-4xl mb-4;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.85);
+  }
+
+  .donation-header p {
+    @apply text-lg max-w-3xl mx-auto;
+  }
+
+  /* Banner genérico */
+  .donation-banner img {
+    @apply w-full h-auto max-h-[500px] object-cover block mx-auto;
+  }
+
+  /* Seção de formulário (compartilhada) */
+  .donation-form-section {
+    @apply bg-white py-12 px-8 w-full mt-8;
+  }
+
+  .donation-form-section h2 {
+    @apply text-center text-3xl text-red-800/85 mb-6;
+  }
+
+  .form-info {
+    @apply text-center max-w-3xl mx-auto mb-8 text-lg text-gray-600;
+  }
+
+  /* Estilos de formulário reutilizáveis */
+  .donation-form {
+    @apply flex flex-col w-full max-w-2xl mx-auto;
+  }
+
+  .donation-form label {
+    @apply mb-2 font-semibold;
+  }
+
+  .donation-form input,
+  .donation-form textarea,
+  .donation-form select {
+    @apply mb-6 p-3 border border-gray-300 rounded-lg text-base;
+  }
+
+  /* Botão principal */
+  .submit-donation {
+    @apply bg-red-800/85 text-white py-3 px-6 text-lg rounded-lg cursor-pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .submit-donation:hover {
+    @apply bg-red-700/85;
+  }
+}
+
+/* Camada utilitária */
+@layer utilities {
+  /* Gradiente vermelho (evita repetição) */
+  .bg-donation-gradient {
+    @apply bg-gradient-to-r from-red-800/85 to-red-700/85;
+  }
+
+  /* Alt background */
+  .alt-bg {
+    @apply bg-gray-50;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .donation-header {
+    @apply py-12 px-4;
+  }
+
+  .donation-header h1 {
+    @apply text-3xl;
+  }
+
+  .donation-form-section {
+    @apply py-8 px-4;
+  }
+}

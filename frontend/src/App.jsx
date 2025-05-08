@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min';
+import Home from './pages/home';   
+import Profile from './pages/user/profile';
+import UserRegister from './pages/user/user_register';
+import Monetary from './pages/donations/monetary';
+import Clothes from './pages/donations/clothes';
+import Foods from './pages/donations/foods';
+import Immigrant from './pages/user/immigrant';  
+import Voluntary from './pages/user/voluntary';  
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div className="app-container">     
+        <Routes>
+          {/* Rota principal */}
+          <Route path="/" element={<Home />} />
+          
+          {/* Autenticação */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* Páginas de perfil */}
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/registro-usuario" element={<UserRegister />} />
+          
+          {/* Páginas de doação */}
+          <Route path="/doacao-monetaria" element={<Monetary />} />
+          <Route path="/doacao-roupas" element={<Clothes />} />
+          <Route path="/doacao-alimentos" element={<Foods />} />
+          
+          {/* Páginas de apoio */}
+          <Route path="/apoio-imigrantes" element={<Immigrant />} />
+          <Route path="/seja-voluntario" element={<Voluntary />} />
+          
+          {/* Rota fallback */}
+          <Route path="*" element={<Home />} />
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
