@@ -5,9 +5,9 @@ import 'bootstrap/dist/js/bootstrap.bundle.min';
 import Home from './pages/home';   
 //import Profile from './pages/user/profile';
 //import UserRegister from './pages/user/user_register';
-//import Monetary from './pages/donations/monetary';
-//import Clothes from './pages/donations/clothes';
-//import Foods from './pages/donations/foods';
+import Monetary from './pages/donations/monetary';
+import Clothes from './pages/donations/clothes';
+import Foods from './pages/donations/foods';
 //import Immigrant from './pages/user/immigrant';  
 //import Voluntary from './pages/user/voluntary';  
 
@@ -25,9 +25,11 @@ function App() {
           {/* Páginas de perfil */}
 
           
-          {/* Páginas de doação */}
+         {/* Grupo de rotas de doações */}
+          <Route path="/doacao-monetaria" element={<Monetary />} />
+          <Route path="/doacao-roupas" element={<Clothes />} />
+          <Route path="/doacao-alimentos" element={<Foods />} />
 
-          
           {/* Páginas de apoio */}
 
           
