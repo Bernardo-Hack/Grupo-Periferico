@@ -1,0 +1,20 @@
+/* Container principal */
+.login-register-container {
+    max-width: 500px;
+    width: 100%;
+    margin: auto; /* Centralização horizontal */
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+    padding: 2rem;
+}
+
+.login-page-wrapper {
+    min-height: 100vh;
+    background: #f8f9fa; /* Cor de fundo da página */
+}
+
+/* Centralização vertical */
+.d-flex.align-items-center {
+    padding: 2rem 0;
+}

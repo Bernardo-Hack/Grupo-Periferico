@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
+import { Footer } from '../../layouts/shared/footer';
 import '../../layouts/style/donations_global.css';
 
 const Foods: React.FC = () => {
@@ -92,6 +93,7 @@ const Foods: React.FC = () => {
           </button>
         </form>
       </section>
+      <Footer />
     </div>
   );
 };
