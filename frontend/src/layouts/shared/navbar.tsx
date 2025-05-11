@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navbar as BsNavbar, Nav, Container, Button, NavDropdown, Image } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import '../style/navbarCSS.css'; 
 export const Navbar = () => {
   const [expanded, setExpanded] = useState(false);
 
@@ -29,12 +30,15 @@ export const Navbar = () => {
               <NavDropdown.Item as={Link} to="/doacao-monetaria">
               Doação Monetária
               </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/doacao-roupas-alimentos">
+              <NavDropdown.Item as={Link} to="/doacao-alimentos">
               Doação de Alimentos
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/doacao-roupas">
+              Doação de Roupas
               </NavDropdown.Item>
             </NavDropdown>
 
-            <Nav.Link as={Link} to="/login">Login</Nav.Link>
+            <Nav.Link as={Link} to="/registro">Login</Nav.Link>
             
             {/* Avatar Dropdown */}
             <NavDropdown
@@ -51,7 +55,6 @@ export const Navbar = () => {
               align="end"
             >
               <NavDropdown.Item as={Link} to="/perfil">Meu Perfil</NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/configuracoes">Configurações</NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item as={Link} to="/logout">Sair</NavDropdown.Item>
             </NavDropdown>
