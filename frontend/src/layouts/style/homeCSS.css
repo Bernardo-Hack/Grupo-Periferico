@@ -195,6 +195,12 @@
   }
 }
 
+body, .text-block, p {
+  direction: ltr; /* Define a direção esquerda-para-direita */
+  unicode-bidi: bidi-override; /* Garante o comportamento padrão */
+  text-align: left; /* Alinhamento padrão */
+}
+
 @media (max-width: 480px) {
   .hero-overlay h1 {
     font-size: 2rem;
