@@ -1,8 +1,9 @@
-// src/App.jsx
+// src/App.tsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect, FC, ReactNode, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
-import Home from './pages/home';   
+import Home from './pages/home';
 import Monetary from './pages/donations/monetary';
 import Clothes from './pages/donations/clothes';
 import Foods from './pages/donations/foods';
@@ -11,34 +12,147 @@ import Immigrant from './pages/user/immigrant';
 import Voluntary from './pages/user/voluntary';
 import Profile from './pages/user/profile';
 
+// Arquivo de declaração de tipos (src/types/global.d.ts)
+declare global {
+  interface Window {
+    google?: {
+      translate?: {
+        TranslateElement: new (
+          options: {
+            pageLanguage: string;
+            includedLanguages: string;
+            layout: number;
+          },
+          elementId: string
+        ) => void;
+        TranslateElementInit?: () => void;
+        InlineLayout?: {
+          SIMPLE: number;
+        };
+      };
+    };
+    googleTranslateElementInit?: () => void;
+  }
+}
+
+// Componente de Tradução Automática
+const GoogleTranslateWidget: FC = () => {
+  const observerRef = useRef<MutationObserver | null>(null);
+
+  useEffect(() => {
+    let script: HTMLScriptElement | null = null;
+
+    const initGoogleTranslate = () => {
+      if (!window.google?.translate) return;
+
+      new window.google.translate.TranslateElement(
+        {
+          pageLanguage: 'pt',
+          includedLanguages: 'en,es,fr,de,it,pt',
+          layout: window.google.translate.InlineLayout?.SIMPLE || 0
+        },
+        'google_translate_element'
+      );
+
+      // Remove elementos do Google após inicialização
+      removeGoogleBranding();
+    };
+
+    const removeGoogleBranding = () => {
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .goog-te-banner-frame, 
+        .goog-te-footer, 
+        .goog-logo-link, 
+        .goog-te-gadget a[href^="https://translate.google.com"] { 
+          display: none !important; 
+        }
+        body { top: 0 !important; }
+      `;
+      document.head.appendChild(style);
+    };
+
+    const loadScript = () => {
+      if (document.querySelector('script[src*="translate.google.com"]')) return;
+
+      script = document.createElement('script');
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      
+      script.onload = () => {
+        window.googleTranslateElementInit = initGoogleTranslate;
+      };
+
+      document.body.appendChild(script);
+
+      // Observer para alterações dinâmicas do DOM
+      observerRef.current = new MutationObserver((mutations) => {
+        mutations.forEach(() => {
+          if (document.querySelector('.goog-te-banner-frame')) {
+            removeGoogleBranding();
+          }
+        });
+      });
+
+      observerRef.current.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    };
+
+    // Delay para garantir carregamento em conexões lentas
+    const timeoutId = setTimeout(loadScript, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (script) document.body.removeChild(script);
+      if (observerRef.current) observerRef.current.disconnect();
+      delete window.googleTranslateElementInit;
+    };
+  }, []);
+
+  return (
+    <div style={{ 
+      position: 'fixed',
+      top: '10px',
+      right: '10px',
+      zIndex: 1000,
+      height: '40px',
+      overflow: 'hidden'
+    }}>
+      <div id="google_translate_element" style={{
+        transform: 'translateY(-4px) scale(0.95)'
+      }}></div>
+    </div>
+  );
+};
+
+// Componente Layout Principal
+const MainLayout: FC<{ children: ReactNode }> = ({ children }) => {
+  return (
+    <div className="app-container">
+      <GoogleTranslateWidget />
+      {children}
+    </div>
+  );
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="app-container">     
+      <MainLayout>
         <Routes>
-          {/* Rota principal */}
           <Route path="/" element={<Home />} />
-
-          {/* Páginas de perfil */}
-          <Route path="/perfil" element={<Profile />} />  {/* Rota de Perfil */}
-
-          {/* Páginas de registro */}
-          <Route path="/registro" element={<UserRegister />} />  {/* Rota de Registro */}
-
-          {/* Grupo de rotas de doações */}
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/registro" element={<UserRegister />} />
           <Route path="/doacao-monetaria" element={<Monetary />} />
           <Route path="/doacao-roupas" element={<Clothes />} />
           <Route path="/doacao-alimentos" element={<Foods />} />
-
-          {/* Páginas de apoio */}
-          <Route path="/imigrantes" element={<Immigrant />} />  {/* Rota de Imigrantes */}
-          <Route path="/voluntarios" element={<Voluntary />} />  {/* Rota de Voluntários */}
-
-          {/* Rota fallback */}
+          <Route path="/imigrantes" element={<Immigrant />} />
+          <Route path="/voluntarios" element={<Voluntary />} />
           <Route path="*" element={<Home />} />
         </Routes>
-      </div>
+      </MainLayout>
     </BrowserRouter>
   );
 }
