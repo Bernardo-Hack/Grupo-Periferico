@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Usuários</title>
+</head>
+<body>
+    <h1>Lista de Usuários</h1>
+    
+    <% if (usuarios && usuarios.length > 0) { %>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>Data de Nascimento</th>
+                    <th>Data de Cadastro</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% usuarios.forEach(usuario => { %>
+                    <tr>
+                        <td><%= usuario.id %></td>
+                        <td><%= usuario.nome %></td>
+                        <td><%= usuario.cpf %></td>
+                        <td><%= usuario.telefone || 'Não informado' %></td>
+                        <td><%= new Date(usuario.data_nascimento).toLocaleDateString('pt-BR') %></td>
+                        <td><%= new Date(usuario.data_cadastro).toLocaleString('pt-BR') %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <p>Nenhum usuário cadastrado</p>
+    <% } %>
+
+    <p>Total de usuários: <%= usuarios ? usuarios.length : 0 %></p>
+
+
+    
+</body>
+</html>
