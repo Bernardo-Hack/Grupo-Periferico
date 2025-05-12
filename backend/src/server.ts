@@ -74,9 +74,7 @@ app.get('/adminMonetaryDonationDashboard', async (req: Request, res: Response, n
     }
 });
 
-app.post(
-  '/reg_user',
-  async (req: Request, res: Response, next: NextFunction) => {
+app.post('/reg_user',async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { nome, cpf, telefone, senha, dt_nasc } = req.body;
 
@@ -116,9 +114,7 @@ app.post(
   }
 );
 
-app.post(
-  '/login',
-  async (req: Request, res: Response, next: NextFunction) => {
+app.post('/login',async (req: Request, res: Response, next: NextFunction) => {
     const { nome, senha } = req.body;
     if (!nome || !senha) {
       return res.status(400).render('login', { errorMessage: 'Preencha nome e senha.' });
@@ -145,6 +141,40 @@ app.post(
     return res.redirect('/adminUserDashboard');
   }
 );
+
+app.post('/reg_doa', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { valor, metodo } = req.body;
+    const userId = req.session.userId;
+
+    if (!userId) {
+      return res.status(401).render('pagina_doacao', {
+        errorMessage: 'Usuário não autenticado.',
+      });
+    }
+
+    if (!valor || !metodo) {
+      return res.status(400).render('pagina_doacao', {
+        errorMessage: 'Preencha todos os campos.',
+      });
+    }
+
+    const insertSQL = `
+      INSERT INTO DoacaoDinheiro (usuario_id, valor, metodo_pagamento, data_doacao)
+      VALUES (?, ?, ?, NOW())
+    `;
+
+    await db.query(insertSQL, [userId, valor, metodo]);
+
+    return res.redirect('/pagina_de_sucesso'); // Ou para onde quiser
+  } catch (err) {
+    console.error('Erro ao registrar doação:', err);
+    return res.status(500).render('pagina_doacao', {
+      errorMessage: 'Erro ao registrar doação.',
+    });
+  }
+});
+
 
 
 
