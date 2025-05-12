@@ -6,9 +6,9 @@ dotenv.config();
 const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true
+  password: 'Simba8!#',
+  database: 'grupo_periferico',
+
 });
 
 
