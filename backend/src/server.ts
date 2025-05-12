@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import db from './config/db';
 import mainroutes from './routes/index';
-const { hashPassword } = require('./encript/authhelp');
 const app = express();
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
@@ -10,6 +9,7 @@ app.use(express.json());
 app.use('/', mainroutes);
 app.use(express.urlencoded({ extended: true }));
 app.set("views", path.join(__dirname, "views"));
+
 
 import { RowDataPacket } from 'mysql2';
 
@@ -46,7 +46,6 @@ app.get('/adminUserDashboard', async (req, res) => {
 });
 
 
-
 app.get('/adminMonetaryDonationDashboard', async (req, res) => {
     try {
         const [results] = await db.query<RowDataPacket[]>(`
@@ -78,7 +77,7 @@ app.post('/resgister_us' ,async (req, res) => {
     try {
         const{nome, cpf, te, phone, email, password,dt_nsc} = req.body;
         
-        const hashedPassword = await hashPassword(password);
+        // const hashedPassword = await hashPassword(password);
 
 
     }
