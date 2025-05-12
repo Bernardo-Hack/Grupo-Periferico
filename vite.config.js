@@ -1,16 +1,32 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
-// https://vite.dev/config/
-// No arquivo vite.config.js do frontend
 export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src')
+    }
+  },
   server: {
+    port: 5173,
+    strictPort: true,
+    open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001', // Porta do backend
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    },
+    // Fallback para SPA usando history API
+    historyApiFallback: true
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
       }
     }
   }
-})
+});
