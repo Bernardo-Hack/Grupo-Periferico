@@ -2,8 +2,9 @@
   "name": "periferico",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+
   "scripts": {
+    "back":"ts-node-dev --respawn --transpile-only src/backend/server.ts",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -27,7 +28,6 @@
     "core-js": "^3.23.3",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "glob": "^9.0.0",
