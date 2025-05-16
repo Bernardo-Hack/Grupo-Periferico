@@ -7,6 +7,7 @@ import { registerDonation } from './functions/doacaoFunc';
 import session from 'express-session';
 
 
+
 import db from './config/db';
 
 
@@ -30,7 +31,7 @@ app.use(
     cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 },
   })
 );
-app.use(userRoutes)
+app.use('/user', userRoutes); 
 app.get('/adminUserDashboard', loadUser);
 app.get('/adminMonetaryDonationDashboard', loadDoacao);
 app.post('/registerDonation', registerDonation);

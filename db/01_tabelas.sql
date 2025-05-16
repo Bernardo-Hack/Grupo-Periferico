@@ -71,3 +71,12 @@ CREATE TABLE Certificado (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
     FOREIGN KEY (distribuicao_id) REFERENCES Distribuicao(id)
 );
+
+CREATE TABLE voluntario (
+    id_voluntario INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    disponibilidade VARCHAR(255) NOT NULL,
+    experiencia TEXT,
+    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
