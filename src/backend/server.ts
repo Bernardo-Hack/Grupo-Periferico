@@ -9,6 +9,7 @@ import cors from 'cors';
 import userRoutes from './functions/userFunc';
 import { loadUser, loadDoacao } from './functions/adminFunc';
 import { registerDonation } from './functions/doacaoFunc';
+import testDB from './functions/testDB';
 
 declare module 'express-session' {
   interface SessionData {
@@ -45,6 +46,7 @@ app.use('/user', userRoutes);
 app.get('/adminUserDashboard', loadUser);
 app.get('/adminMonetaryDonationDashboard', loadDoacao);
 app.post('/api/doacoes/dinheiro', registerDonation);
+app.use('/test', testDB);
 
 // 4) Error handler em JSON
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

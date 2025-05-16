@@ -117,6 +117,13 @@ router.put(
   })
 );
 
+router.get(
+  '/all',
+  asyncHandler(async (req, res) => {
+    const [rows] = await pool.query('SELECT id, nome, cpf, telefone, data_nascimento, data_cadastro FROM usuario');
+    res.status(200).json({ ok: true, usuarios: rows });
+  })
+);
 
 
 export default router;

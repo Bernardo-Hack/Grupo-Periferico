@@ -112,50 +112,62 @@ const Login: React.FC = () => {
           role="tabpanel"
           aria-labelledby="tab-register"
         >
-          <form className="register-form">
-            
+          <form
+            className="register-form"
+            onSubmit={async (e) => {
+              e.preventDefault();
+
+              const nome = (document.getElementById('registerName') as HTMLInputElement)?.value;
+              const cpf = (document.getElementById('registerCpf') as HTMLInputElement)?.value;
+              const telefone = (document.getElementById('registerTelefone') as HTMLInputElement)?.value;
+              const dt_nasc = (document.getElementById('registerNascimento') as HTMLInputElement)?.value;
+              const senha = (document.getElementById('registerPassword') as HTMLInputElement)?.value;
+
+              const res = await fetch('http://localhost:5000/user/reg_user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ nome, cpf, telefone, dt_nasc, senha }),
+              });
+
+              const json = await res.json();
+              if (json.ok) {
+                alert('Usuário cadastrado com sucesso!');
+              } else {
+                alert('Erro: ' + json.error);
+              }
+            }}
+          >
             {/* Campo de nome */}
             <div data-mdb-input-init className="form-outline mb-4">
               <input type="text" id="registerName" className="form-control" />
               <label className="form-label" htmlFor="registerName">Nome completo</label>
             </div>
-            
-            {/* Campo de usuário */}
-            <div data-mdb-input-init className="form-outline mb-4">
-              <input type="text" id="registerUsername" className="form-control" />
-              <label className="form-label" htmlFor="registerUsername">Nome de usuário</label>
-            </div>
-            
+
             {/* Campo de CPF */}
             <div data-mdb-input-init className="form-outline mb-4">
-              <input type="text" id="registerEmail" className="form-control" />
-              <label className="form-label" htmlFor="registerEmail">CPF</label>
+              <input type="text" id="registerCpf" className="form-control" />
+              <label className="form-label" htmlFor="registerCpf">CPF</label>
             </div>
-            
+
             {/* Campo de telefone */}
             <div data-mdb-input-init className="form-outline mb-4">
-              <input type="text" id="registerEmail" className="form-control" />
-              <label className="form-label" htmlFor="registerEmail">Telefone</label>
+              <input type="text" id="registerTelefone" className="form-control" />
+              <label className="form-label" htmlFor="registerTelefone">Telefone</label>
             </div>
-            
+
             {/* Campo de data de nascimento */}
             <div data-mdb-input-init className="form-outline mb-4">
-              <input type="date" id="registerEmail" className="form-control" />
-              <label className="form-label" htmlFor="registerEmail">Data de nascimento</label>
+              <input type="date" id="registerNascimento" className="form-control" />
+              <label className="form-label" htmlFor="registerNascimento">Data de nascimento</label>
             </div>
-            
+
             {/* Campo de senha */}
             <div data-mdb-input-init className="form-outline mb-4">
               <input type="password" id="registerPassword" className="form-control" />
               <label className="form-label" htmlFor="registerPassword">Senha</label>
             </div>
-            
-            {/* Confirmação de senha */}
-            <div data-mdb-input-init className="form-outline mb-4">
-              <input type="password" id="registerRepeatPassword" className="form-control" />
-              <label className="form-label" htmlFor="registerRepeatPassword">Repetir senha</label>
-            </div>
-            
+
             {/* Checkbox de termos */}
             <div className="form-check d-flex justify-content-center mb-4">
               <input
@@ -170,11 +182,12 @@ const Login: React.FC = () => {
                 Eu li e concordo com os termos
               </label>
             </div>
-            
+
             <button type="submit" className="btn btn-primary btn-block mb-3">
               Cadastrar
             </button>
           </form>
+
         </div>
       </div>
     </div>
