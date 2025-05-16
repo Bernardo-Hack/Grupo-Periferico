@@ -1,162 +1,122 @@
-// src/backend/routes/userFunc.ts
-import express, { Router, Request, Response, NextFunction } from 'express';
-import db from '../config/db';
-import { hashPassword, comparePassword } from '../utils/encrypt'; 
-import { RowDataPacket } from 'mysql2'; 
+// src/backend/functions/userFunc.ts
+import { Router, Request, Response, NextFunction } from 'express';
+import pool from '../config/db';                 // seu pool mysql2/promise
+import { hashPassword, comparePassword } from '../utils/encrypt';
+import { RowDataPacket } from 'mysql2';
 
-const router = express.Router();
+const router = Router();
+
+// wrapper para capturar erros async
+const asyncHandler = (fn: any) =>
+  (req: Request, res: Response, next: NextFunction) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
+
+// --------- 1) REGISTRO -----------
+router.post(
+  '/reg_user',
+  asyncHandler(async (req, res) => {
+    console.log('🔔 Body em POST /user/reg_user:', req.body);
+    const { nome, cpf, telefone, dt_nasc, senha } = req.body;
+    if (!nome || !cpf || !telefone || !dt_nasc || !senha) {
+      return res.status(400).json({ error: 'Preencha todos os campos.' });
+    }
+    const hashed = await hashPassword(senha);
+    await pool.query(
+      `INSERT INTO usuario
+         (nome, cpf, telefone, senha_hash, data_nascimento, data_cadastro)
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [nome, cpf, telefone, hashed, dt_nasc]
+    );
+    return res.status(201).json({ ok: true });
+  })
+);
 
 
-router.use(express.json());
-router.post('/reg_user', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { nome, cpf, telefone, senha, dt_nasc } = req.body;
+// --------- 2) LOGIN -----------
+router.post(
+  '/login',
+  asyncHandler(async (req, res) => {
+    console.log('🔔 Body em POST /user/login:', req.body);
 
-    if (!nome || !cpf || !telefone || !senha || !dt_nasc) {
-      return res.status(400).render('register', {
-        errorMessage: 'Preencha todos os campos.',
-      });
+    const { nome, senha } = req.body;
+    if (!nome || !senha) {
+      return res.status(400).json({ error: 'Preencha nome e senha.' });
     }
 
-    const hashedPassword = await hashPassword(senha);
-
-    const insertSQL = `
-      INSERT INTO usuario
-        (nome, cpf, telefone, senha_hash, data_nascimento, data_cadastro)
-      VALUES (?, ?, ?, ?, ?, NOW())
-    `;
-
-    await db.query(insertSQL, [nome, cpf, telefone, hashedPassword, dt_nasc]);
-
-    return res.redirect('/login');
-  } catch (err) {
-    console.error('Erro no registro:', err);
-    return res.status(500).render('register', {
-      errorMessage: 'Erro ao registrar, tente novamente.',
-    });
-  }
-});
-
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
-  const { nome, senha } = req.body;
-  if (!nome || !senha) {
-    return res.status(400).render('login', {
-      errorMessage: 'Preencha nome e senha.',
-    });
-  }
-
-  const [rows] = await db.query<RowDataPacket[]>(
-    'SELECT id, nome, senha_hash FROM usuario WHERE nome = ?',
-    [nome]
-  );
-
-  if (rows.length === 0) {
-    return res.status(401).render('login', {
-      errorMessage: 'Nome ou senha inválidos.',
-    });
-  }
-
-  const user = rows[0];
-  const isValid = await comparePassword(senha, user.senha_hash as string);
-
-  if (!isValid) {
-    return res.status(401).render('login', {
-      errorMessage: 'Nome ou senha inválidos.',
-    });
-  }
-
-  req.session.userId = user.id;
-  req.session.userName = user.nome;
-
-  return res.redirect('/adminUserDashboard');
-});
-
-
-
-router.get('profile', async (req: Request, res: Response) => {
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
-
-  const [rows] = await db.query<RowDataPacket[]>(
-    'SELECT nome, cpf, telefone, data_nascimento FROM usuario WHERE id = ?',
-    [req.session.userId]
-  );
-
-  if (rows.length === 0) {
-    return res.status(404).render('profile', {
-      errorMessage: 'Usuário não encontrado.',
-    });
-  }
-
-  const user = rows[0];
-
-  return res.render('profile', {
-    user,
-    pageTitle: 'Perfil do Usuário',
-  });
-});
-
-
-router.get('logout', (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Erro ao encerrar sessão:', err);
-      return res.status(500).render('error', {
-        errorMessage: 'Erro ao encerrar sessão.',
-      });
-    }
-    return res.redirect('/login');
-  });
-})
-
-
-
-
-router.post('/reg_voluntary', async (req: Request, res: Response) => {
-  try {
-    console.log('Headers recebidos:', req.headers);
-    console.log('Corpo bruto:', req.body);
-    if (!req.body) {
-      res.status(400).json({ message: 'Dados inválidos' });
-      return;
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT id, nome, senha_hash FROM usuario WHERE nome = ?',
+      [nome]
+    );
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Nome ou senha inválidos.' });
     }
 
-    // Adicione um log para depuração
-    console.log('Corpo recebido:', req.body);
-    const { 
-      nome, 
-      email, 
-      disponibilidade, 
-      experiencia 
-    } = req.body; 
-
-    // Validação básica
-    if (!nome?.trim() || !email?.trim() || !disponibilidade?.trim()) {
-      res.status(400).json({ message: 'Preencha todos os campos obrigatórios.' });
-      return;
+    const user = rows[0];
+    const valid = await comparePassword(senha, user.senha_hash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Nome ou senha inválidos.' });
     }
 
-    // Comando SQL para inserção
-    const insertSQL = `
-      INSERT INTO voluntario (nome, email, disponibilidade, experiencia, data_cadastro)
-      VALUES (?, ?, ?, ?, NOW())
-    `;
+    req.session.userId   = user.id;
+    req.session.userName = user.nome;
+    return res.status(200).json({ ok: true });
+  })
+);
 
-    // Executa a query com os dados
-    await db.query(insertSQL, [
-      nome,
-      email,
-      disponibilidade,
-      experiencia || null, // evita campo vazio
-    ]);
+// Logout do usuário
+router.post(
+  '/logout',
+  asyncHandler(async (req, res) => {
+    req.session.destroy(err => {
+      if (err) {
+        return res.status(500).json({ error: 'Erro ao encerrar sessão' });
+      }
+      res.clearCookie('connect.sid');
+      return res.status(200).json({ ok: true });
+    });
+  })
+);
 
-    // Retorna resposta de sucesso
-    res.status(201).json({ message: 'Voluntário registrado com sucesso!' });
-  } catch (err) {
-    console.error('Erro ao registrar voluntário:', err);
-    res.status(500).json({ message: 'Erro interno ao registrar voluntário. Tente novamente mais tarde.' });
-  }
-});
+// Retorna os dados do perfil do usuário logado
+router.get(
+  '/profile',
+  asyncHandler(async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT id, nome, cpf, telefone, data_nascimento FROM usuario WHERE id = ?',
+      [req.session.userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    return res.status(200).json(rows[0]);
+  })
+);
+
+// Atualiza os dados do perfil do usuário logado
+router.put(
+  '/profile',
+  asyncHandler(async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const { nome, telefone, data_nascimento } = req.body;
+
+    await pool.query(
+      'UPDATE usuario SET nome = ?, telefone = ?, data_nascimento = ? WHERE id = ?',
+      [nome, telefone, data_nascimento, req.session.userId]
+    );
+
+    return res.status(200).json({ ok: true });
+  })
+);
+
+
 
 export default router;

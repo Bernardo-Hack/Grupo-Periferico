@@ -1,43 +1,61 @@
+// src/backend/server.ts
 import dotenv from 'dotenv';
 dotenv.config();
+
 import express, { Request, Response, NextFunction } from 'express';
-import { loadUser, loadDoacao } from './functions/adminFunc';
-import userRoutes from './functions/userFunc';
-import { registerDonation } from './functions/doacaoFunc';
 import session from 'express-session';
+import cors from 'cors';
 
+import userRoutes from './functions/userFunc';
+import { loadUser, loadDoacao } from './functions/adminFunc';
+import { registerDonation } from './functions/doacaoFunc';
 
-
-import db from './config/db';
-
-
-import 'express-session';
 declare module 'express-session' {
   interface SessionData {
     userId: number;
     userName: string;
   }
 }
+
 const app = express();
 
-// Middlewares
+// 1) Parsing do body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || '99d8f7e6c5b4a3a2b1a0', //chave temporaria
-    resave: false,
-    saveUninitialized: false,
-    cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 },
-  })
-);
-app.use('/user', userRoutes); 
+
+// 2) CORS + sessão
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'segredo_temporario',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24
+  }
+}));
+
+// 3) Rotas
+app.use('/user', userRoutes);
 app.get('/adminUserDashboard', loadUser);
 app.get('/adminMonetaryDonationDashboard', loadDoacao);
-app.post('/registerDonation', registerDonation);
+app.post('/api/doacoes/dinheiro', registerDonation);
 
+// 4) Error handler em JSON
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('💥 Erro não capturado:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error'
+  });
+});
 
-const PORT = process.env.PORT || 5000;
+// 5) Start
+const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, () => {
   console.log(`🔥 Servidor rodando em http://localhost:${PORT}`);
 });

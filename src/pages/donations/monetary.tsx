@@ -1,94 +1,126 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import '../../layouts/style/donations_global.css';
 
-
 const Monetary: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const formData = {
+      valor: parseFloat(e.currentTarget.valor.value),
+      metodo_pagamento: e.currentTarget.metodo_pagamento.value,
+      nome: e.currentTarget.nome.value,
+      email: e.currentTarget.email.value
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/api/doacoes/dinheiro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao processar doação');
+      }
+
+      window.location.href = '/doacao/sucesso';
+      
+    } catch (err) {
+      setError(err.message || 'Ocorreu um erro inesperado');
+      console.error('Erro na doação:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="monetary-page">
       <Navbar />
 
-      {/* Header com mensagem de impacto */}
+      {/* Header */}
       <header className="donation-header">
         <div className="header-content">
           <h1>Ajude a Transformar Vidas</h1>
-          <p>
-            Sua contribuição financeira é a força que impulsiona nossos projetos e transforma realidades. 
-            Com cada doação, possibilitamos ações que mudam a vida de comunidades e promovem um futuro mais justo e sustentável.
-          </p>
+          <p>Sua contribuição faz a diferença!</p>
         </div>
       </header>
 
-      {/* Banner com imagem grande */}
-      <section className="donation-banner">
-        <img
-          src="src/assets/images/photo-1542367787-4baf35f3037d.avif"
-          alt="Banner de Doação"
-        />
-      </section>
-
-      {/* Seção de Informações (impacto) com ícones */}
-      <section className="donation-info">
-        <div className="info-item">
-            <i className="fas fa-hand-holding-dollar icon"></i>
-            <h3>Transparência Total</h3>
-            <p>
-            Cada centavo é rastreado e aplicado com total clareza, permitindo que você acompanhe o impacto da sua doação.
-            </p>
-        </div>
-
-        <div className="info-item">
-            <i className="fas fa-piggy-bank icon"></i>
-            <h3>Investimento no Futuro</h3>
-            <p>
-            Sua ajuda não só alivia emergências, mas também investe no desenvolvimento de projetos que constroem um amanhã melhor.
-            </p>
-        </div>
-
-        <div className="info-item">
-            <i className="fas fa-handshake-angle icon"></i>
-            <h3>Cuidado e Impacto Social</h3>
-            <p>
-            Ao doar, você fortalece iniciativas que promovem inclusão, apoio a imigrantes e oportunidades para comunidades em vulnerabilidade.
-            </p>
-        </div>
-        </section>
-
-      {/* Seção do Formulário de Doação (relacionado à tabela DoacaoDinheiro) */}
+      {/* Formulário */}
       <section className="donation-form-section">
         <h2>Faça sua doação</h2>
-        <form className="donation-form">
-            {/* Dados do usuário */}
+        <form className="donation-form" onSubmit={handleSubmit}>
+          <div className="form-group">
             <label htmlFor="nome">Nome Completo</label>
-            <input type="text" id="nome" name="nome" required />
+            <input 
+              type="text" 
+              id="nome" 
+              name="nome" 
+              autoComplete="name"
+              required 
+            />
+          </div>
 
+          <div className="form-group">
             <label htmlFor="email">E-mail</label>
-            <input type="email" id="email" name="email" required />
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              autoComplete="email"
+              required 
+            />
+          </div>
 
-            {/* Campos específicos para doação monetária */}
+          <div className="form-group">
             <label htmlFor="valor">Valor (R$)</label>
             <input 
-            type="number" 
-            id="valor" 
-            name="valor" 
-            min="1" 
-            step="0.01" 
-            required 
+              type="number" 
+              id="valor" 
+              name="valor" 
+              min="1" 
+              step="0.01" 
+              autoComplete="transaction-amount"
+              required 
             />
+          </div>
 
+          <div className="form-group">
             <label htmlFor="metodo_pagamento">Método de Pagamento</label>
-            <select id="metodo_pagamento" name="metodo_pagamento" required>
-            <option value="">Selecione</option>
-            <option value="pix">PIX</option>
-            <option value="cartao">Cartão de Crédito/Débito</option>
-            <option value="boleto">Boleto Bancário</option>
+            <select 
+              id="metodo_pagamento" 
+              name="metodo_pagamento" 
+              autoComplete="cc-type"
+              required
+            >
+              <option value="">Selecione</option>
+              <option value="pix">PIX</option>
+              <option value="cartao">Cartão</option>
+              <option value="boleto">Boleto</option>
             </select>
+          </div>
 
-            <button type="submit" className="submit-donation">
-            Confirmar Doação
-            </button>
+          {error && <div className="error-message">{error}</div>}
+
+          <button 
+            type="submit" 
+            className="submit-donation"
+            disabled={loading}
+          >
+            {loading ? 'Processando...' : 'Confirmar Doação'}
+          </button>
         </form>
-        </section>
+      </section>
     </div>
   );
 };
