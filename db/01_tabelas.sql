@@ -22,7 +22,9 @@ CREATE TABLE Administrador (
 -- Tabela de doações financeiras
 CREATE TABLE DoacaoDinheiro (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
+    usuario_id INT,
+    nome_doador VARCHAR(255) NOT NULL,
+    email_doador VARCHAR(255) NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     data_doacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     metodo_pagamento ENUM('pix', 'cartao', 'boleto') NOT NULL,
