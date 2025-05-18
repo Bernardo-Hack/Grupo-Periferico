@@ -161,9 +161,6 @@ const Login: React.FC = () => {
 
                 <button type="submit" className="btn btn-primary btn-block mb-4">Entrar</button>
 
-                <div className="text-center">
-                  <p>Não é membro? <a href="#!">Cadastre-se</a></p>
-                </div>
               </form>
             </div>
 

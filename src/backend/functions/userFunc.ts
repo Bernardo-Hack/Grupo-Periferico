@@ -77,30 +77,10 @@ router.post(
   })
 );
 
-// Retorna os dados do perfil do usuário logado
-router.get(
-  '/profile',
-  asyncHandler(async (req, res) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ error: 'Não autenticado' });
-    }
-
-    const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT id, nome, cpf, telefone, data_nascimento FROM usuario WHERE id = ?',
-      [req.session.userId]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-
-    return res.status(200).json(rows[0]);
-  })
-);
 
 // Atualiza os dados do perfil do usuário logado
 router.put(
-  '/profile',
+  '/edt_profile',
   asyncHandler(async (req, res) => {
     if (!req.session.userId) {
       return res.status(401).json({ error: 'Não autenticado' });
@@ -118,12 +98,47 @@ router.put(
 );
 
 router.get(
-  '/all',
-  asyncHandler(async (req, res) => {
-    const [rows] = await pool.query('SELECT id, nome, cpf, telefone, data_nascimento, data_cadastro FROM usuario');
-    res.status(200).json({ ok: true, usuarios: rows });
-  })
+  '/profile',
+  (req: Request, res: Response, next: NextFunction) => {
+    (async () => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.status(401).json({ error: 'Não autenticado.' });
+        }
+
+        const [userRows] = await pool.query<RowDataPacket[]>(
+          `SELECT nome, telefone, DATE_FORMAT(data_cadastro, '%Y-%m-%d') AS data_cadastro
+           FROM usuario
+           WHERE id = ?`,
+          [userId]
+        );
+        if (userRows.length === 0) {
+          return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+        const user = userRows[0];
+
+        const [donRows] = await pool.query<RowDataPacket[]>(
+          `SELECT id, valor, metodo_pagamento AS metodo,
+            DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
+           FROM DoacaoDinheiro
+           WHERE usuario_id = ?
+           ORDER BY data_doacao DESC`,
+          [userId]
+        );
+
+        return res.status(200).json({
+          user,
+          doacoes: donRows
+        });
+      } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+        return res.status(500).json({ error: 'Erro interno no servidor.' });
+      }
+    })().catch(next);
+  }
 );
+
 
 
 export default router;
