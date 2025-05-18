@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Navbar } from '../layouts/shared/navbar';
 import { Footer } from '../layouts/shared/footer';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +7,44 @@ import '../layouts/style/homeCSS.css';
 
 export default function Home() {
   const navigate = useNavigate();
+   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Função para adicionar refs ao array
+  const addToRefs = (el) => {
+    if (el && !sectionRefs.current.includes(el)) {
+      sectionRefs.current.push(el);
+    }
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            entry.target.classList.add('animate-fadeIn');
+            // Opcional: deixar de observar após a animação
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px' // Adia um pouco o trigger
+      }
+    );
+
+    // Observar todas as seções registradas
+    sectionRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      sectionRefs.current.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
 
   return (
     <div className="home-container">
@@ -26,7 +65,10 @@ export default function Home() {
 
       {/* Seção Sobre Nós */}
       <section id="sobre-nos" className="home-section alt-bg">
-        <div className="section-content styled-section reversed">
+        <div 
+          ref={addToRefs}
+          className="section-content styled-section reversed"
+        >
           <img 
             className="section-image" 
             src="src\assets\images\istockphoto-2171791904-612x612.jpg" 
@@ -49,7 +91,10 @@ export default function Home() {
 
       {/* Seção Doação Monetária */}
       <section id="doacao-monetaria" className="home-section">
-        <div className="section-content styled-section">
+        <div 
+          ref={addToRefs}
+          className="section-content styled-section"
+        >
           <img 
             className="section-image" 
             src="src/assets/images/istockphoto-2171792105-612x612.jpg" 
@@ -70,7 +115,10 @@ export default function Home() {
 
       {/* Seção Doação de Roupas */}
       <section id="doacao-roupas" className="home-section alt-bg">
-        <div className="section-content styled-section reversed">
+        <div 
+          ref={addToRefs}
+          className="section-content styled-section reversed"
+        >
           <img 
             className="section-image" 
             src="src/assets/images/istockphoto-2171792150-612x612.jpg" 
@@ -91,7 +139,10 @@ export default function Home() {
 
       {/* Seção Doação de Alimentos */}
       <section id="doacao-alimentos" className="home-section">
-        <div className="section-content styled-section">
+        <div 
+          ref={addToRefs}
+          className="section-content styled-section"
+        >
           <img 
             className="section-image" 
             src="src\assets\images\istockphoto-2171791540-612x612.jpg" 
@@ -112,7 +163,10 @@ export default function Home() {
 
       {/* Seção Apoio a Imigrantes */}
       <section id="apoio-imigrantes" className="home-section alt-bg">
-        <div className="section-content styled-section reversed">
+        <div 
+          ref={addToRefs}
+          className="section-content styled-section reversed"
+        >
           <img 
             className="section-image" 
             src="src/assets/images/photo-1488521787991-ed7bbaae773c.avif" 
@@ -133,7 +187,10 @@ export default function Home() {
 
       {/* Seção Voluntariado */}
       <section id="voluntariado" className="home-section">
-        <div className="section-content styled-section">
+        <div 
+          ref={addToRefs}
+          className="section-content styled-section"
+        >
           <img 
             className="section-image" 
             src="src/assets/images/istockphoto-2171791845-612x612.jpg" 
