@@ -34,7 +34,7 @@ CREATE TABLE DoacaoDinheiro (
 -- Tabela de doações de roupas
 CREATE TABLE DoacaoRoupa (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
+    usuario_id INT,
     tipo VARCHAR(50) NOT NULL,
     quantidade INT NOT NULL,
     tamanho VARCHAR(10),
