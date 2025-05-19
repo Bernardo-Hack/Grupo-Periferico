@@ -3,6 +3,7 @@ import { useEffect, FC, ReactNode, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
+import Adm from './pages/adm/admin';
 import Home from './pages/home';
 import Monetary from './pages/donations/monetary';
 import Clothes from './pages/donations/clothes';
@@ -102,6 +103,7 @@ export default function App() {
         <Route path="/doacao-alimentos" element={<Foods />} />
         <Route path="/imigrantes" element={<Immigrant />} />
         <Route path="/voluntarios" element={<Voluntary />} />
+        <Route path="/admin" element={<Adm />} />
         
         {/* Rota curinga para 404 */}
         <Route path="*" element={<Home />} />

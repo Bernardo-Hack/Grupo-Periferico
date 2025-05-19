@@ -1,17 +1,58 @@
 // adminFunc.ts
-
-import { Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import db from '../config/db';
 import { RowDataPacket } from 'mysql2';
+import { comparePassword } from '../utils/encrypt';
 
-// Exporta a função para o dashboard de usuários
-export const loadUser = async (req: Request, res: Response, next: NextFunction) => {
+const router = Router();
+
+// AsyncHandler igual ao userFunc.ts
+const asyncHandler = (fn: any) =>
+  (req: Request, res: Response, next: NextFunction) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
+
+// Extensão da sessão
+declare module 'express-session' {
+  interface SessionData {
+    adminId?: number;
+  }
+}
+
+// ========== MIDDLEWARES ==========
+export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
+  req.session.adminId ? next() : res.redirect('/admin/login');
+};
+
+// ========== ROTAS ADMIN ==========
+router.get('/admin/:username/:password', asyncHandler(async (req: Request, res: Response) => {
+  const { username, password } = req.params;
+
+  const [rows] = await db.query<RowDataPacket[]>(
+    'SELECT id, senha_hash FROM admin WHERE username = ?',
+    [username]
+  );
+
+  if (!rows[0] || !(await comparePassword(password, rows[0].senha_hash))) {
+    return res.status(401).json({ error: 'Acesso negado' });
+  }
+
+  req.session.adminId = rows[0].id;
+  res.redirect('/admin/dashboard');
+}));
+
+router.get('/admin/logout', (req: Request, res: Response) => {
+  req.session.destroy(() => res.redirect('/'));
+});
+
+// ========== FUNÇÕES DASHBOARD ==========
+export const loadUser = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [results] = await db.query<RowDataPacket[]>('SELECT * FROM usuario ORDER BY nome');
-    const usuarios = results || [];
+    const [results] = await db.query<RowDataPacket[]>(
+      'SELECT * FROM usuario ORDER BY nome'
+    );
 
     res.render("admin_dashboard", {
-      usuarios,
+      usuarios: results || [],
       currentDate: new Date().toLocaleDateString('pt-BR'),
       pageTitle: "Painel Administrativo"
     });
@@ -19,10 +60,9 @@ export const loadUser = async (req: Request, res: Response, next: NextFunction) 
     console.error("Erro completo:", error);
     res.render("admin_dashboard", { usuarios: [] });
   }
-};
+});
 
-// Exporta a função para o dashboard de doações
-export const loadDoacao = async (req: Request, res: Response, next: NextFunction) => {
+export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
   try {
     const [results] = await db.query<RowDataPacket[]>(`
       SELECT d.id, u.nome, d.valor, d.metodo_pagamento, d.data_doacao
@@ -37,6 +77,12 @@ export const loadDoacao = async (req: Request, res: Response, next: NextFunction
     });
   } catch (error) {
     console.error("Erro ao buscar doações:", error);
-    res.render('admin_doacoes', { doacoes: [], pageTitle: "Doações em Dinheiro" });
+    res.render('admin_doacoes', { doacoes: [] });
   }
-};
+});
+
+// ========== ROTAS PROTEGIDAS ==========
+router.get('/admin/dashboard', adminAuth, loadUser);
+router.get('/admin/doacoes', adminAuth, loadDoacao);
+
+export default router;
