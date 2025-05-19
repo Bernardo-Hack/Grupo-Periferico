@@ -42,12 +42,11 @@ CREATE TABLE DoacaoRoupa (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
--- Tabela de doações de alimentos
 CREATE TABLE DoacaoAlimento (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
+    usuario_id INT,
     tipo VARCHAR(50) NOT NULL,
-    quantidade_kg DECIMAL(5,2) NOT NULL,
+    quantidade DECIMAL(10,2) NOT NULL,
     data_doacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
