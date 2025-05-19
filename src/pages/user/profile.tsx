@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
+import '../../layouts/style/profileCSS.css';
+
 
 interface Doacao {
   id: number;
@@ -45,11 +47,6 @@ const Profile: React.FC = () => {
       <header className="profile-header">
         <div className="header-content">
           <div className="profile-info">
-            <img
-              src="https://via.placeholder.com/150"
-              alt="Profile"
-              className="profile-pic"
-            />
             <div className="user-details">
               <h1>{user.nome}</h1>
               <p>Telefone: {user.telefone}</p>

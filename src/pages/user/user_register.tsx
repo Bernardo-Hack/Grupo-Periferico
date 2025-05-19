@@ -187,8 +187,13 @@ const Login: React.FC = () => {
                   <label className="form-label" htmlFor="registerTelefone">Telefone</label>
                 </div>
 
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="date" id="registerNascimento" className="form-control" />
+                <div className="form-outline mb-4">
+                  <input
+                    type="date"
+                    id="registerNascimento"
+                    className="form-control active"
+                    placeholder=" "
+                  />
                   <label className="form-label" htmlFor="registerNascimento">Data de nascimento</label>
                 </div>
 

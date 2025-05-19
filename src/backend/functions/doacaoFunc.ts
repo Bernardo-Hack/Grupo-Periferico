@@ -82,7 +82,7 @@ export const registerClothesDonation = async (req: Request, res: Response, next:
     console.error('Erro detalhado:', err);
     return res.status(500).json({ 
       success: false,
-      message: err.message || 'Erro ao registrar doação de roupas.' 
+      message: (err instanceof Error ? err.message : 'Erro ao registrar doação de roupas.') 
     });
   }
 };
@@ -132,7 +132,7 @@ export const registerFoodDonation = async (req: Request, res: Response, next: Ne
     console.error('Erro ao registrar doação de alimentos:', err);
     return res.status(500).json({ 
       success: false,
-      message: err.message || 'Erro ao registrar doação de alimentos.' 
+      message: (err instanceof Error ? err.message : 'Erro ao registrar doação de alimentos.') 
     });
   }
 };
