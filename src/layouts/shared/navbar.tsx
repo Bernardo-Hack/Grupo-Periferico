@@ -1,9 +1,36 @@
 import { useState } from 'react';
-import { Navbar as BsNavbar, Nav, Container, Button, NavDropdown, Image } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import '../style/navbarCSS.css'; 
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  Navbar as BsNavbar,
+  Nav,
+  Container,
+  Button,
+  NavDropdown,
+  Image
+} from 'react-bootstrap';
+import '../style/navbarCSS.css';
+
 export const Navbar = () => {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate(); // usar para redirecionar após logout
+
+  const handleLogout = () => {
+    fetch('http://localhost:5000/user/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then(res => {
+        if (res.ok) {
+          navigate('/login'); // redireciona para login
+        } else {
+          alert('Erro ao sair da conta.');
+        }
+      })
+      .catch(err => {
+        console.error('Erro no logout:', err);
+        alert('Erro de conexão ao sair da conta.');
+      });
+  };
 
   return (
     <BsNavbar 
@@ -23,42 +50,39 @@ export const Navbar = () => {
         <BsNavbar.Brand as={Link} to="/">ONG Grupo Periférico</BsNavbar.Brand>
 
         <BsNavbar.Collapse id="navbarTogglerDemo03">
-            <Nav className="ms-auto mb-2 mb-lg-0">
-            
-            {/* Dropdown Doar */}
+          <Nav className="ms-auto mb-2 mb-lg-0">
             <NavDropdown title="Doar" id="dropdown-doar">
               <NavDropdown.Item as={Link} to="/doacao-monetaria">
-              Doação Monetária
+                Doação Monetária
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/doacao-alimentos">
-              Doação de Alimentos
+                Doação de Alimentos
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/doacao-roupas">
-              Doação de Roupas
+                Doação de Roupas
               </NavDropdown.Item>
             </NavDropdown>
 
             <Nav.Link as={Link} to="/registro">Login</Nav.Link>
-            
-            {/* Avatar Dropdown */}
+
             <NavDropdown
               title={
-              <Image
-                src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/img (31).webp"
-                roundedCircle
-                height="22"
-                alt="Foto do Perfil"
-                loading="lazy"
-              />
+                <Image
+                  src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/img (31).webp"
+                  roundedCircle
+                  height="22"
+                  alt="Foto do Perfil"
+                  loading="lazy"
+                />
               }
               id="navbarDropdownMenuLink"
               align="end"
             >
               <NavDropdown.Item as={Link} to="/perfil">Meu Perfil</NavDropdown.Item>
               <NavDropdown.Divider />
-              <NavDropdown.Item as={Link} to="/logout">Sair</NavDropdown.Item>
+              <NavDropdown.Item onClick={handleLogout}>Sair</NavDropdown.Item>
             </NavDropdown>
-            </Nav>
+          </Nav>
         </BsNavbar.Collapse>
       </Container>
     </BsNavbar>

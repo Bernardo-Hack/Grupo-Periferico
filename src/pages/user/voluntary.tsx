@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import { Footer } from '../../layouts/shared/footer';
+import '../../layouts/style/voluntaryCSS.css';
 
 const Voluntary: React.FC = () => {
   const [formData, setFormData] = useState({
