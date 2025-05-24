@@ -2,129 +2,90 @@ import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import '../../layouts/style/donations_global.css';
 import Swal from 'sweetalert2';
-
-interface ClothesDonationForm {
-  nome: string;
-  email: string;
-  tipo: string;
-  quantidade: number;
-  tamanho: string;
-}
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 const Clothes: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<ClothesDonationForm>({
-    nome: '',
-    email: '',
-    tipo: '',
-    quantidade: 1,
-    tamanho: ''
-  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'quantidade' ? parseInt(value) || 0 : value
-    }));
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.nome.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira seu nome completo',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira um e-mail válido',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    if (!formData.tipo.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, informe o tipo de roupa',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    if (formData.quantidade <= 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira uma quantidade válida',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    return true;
-  };
+  const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
+
+    const donationName = (document.getElementById('donationName') as HTMLInputElement)?.value;
+    const donationEmail = (document.getElementById('donationEmail') as HTMLInputElement)?.value;
+    const donationType = (document.getElementById('donationType') as HTMLInputElement)?.value;
+    const donationQuantity = (document.getElementById('donationQuantity') as HTMLInputElement)?.value;
+    const donationSize = (document.getElementById('donationSize') as HTMLInputElement)?.value;
+
+    if (!donationName || !donationEmail || !donationType || !donationQuantity || !donationSize) {
+      return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
     }
 
-    setLoading(true);
+    if (!donationName) {
+      return Swal.fire('Erro', 'Insira um nome.', 'error');
+    }
+
+    if (!donationEmail || !validarEmail(donationEmail)) {
+      return Swal.fire('Erro', 'Insira um e-mail válido.', 'error');
+    }
+
+    if (!donationType) {
+      return Swal.fire('Erro', 'Insira um tipo de roupa válida.', 'error');
+    }
+
+    if (!donationQuantity) {
+      return Swal.fire('Erro', 'Insira uma quantidade válida.', 'error');
+    }
+
+    if (!donationSize) {
+      return Swal.fire('Erro', 'Insira um tamanho válido.', 'error');
+    }
 
     try {
-      const response = await fetch('http://localhost:5000/api/doacoes/roupas', {
+      const res = await fetch('http://localhost:5000/api/doacoes/roupas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          nome: formData.nome,
-          email: formData.email,
-          tipo: formData.tipo,
-          quantidade: formData.quantidade,
-          tamanho: formData.tamanho
+          nome: donationName,
+          email: donationEmail,
+          quantidade: donationQuantity,
+          tipo: donationType,
+          tamanho: donationSize
         }),
         credentials: 'include'
       });
 
-      const data = await response.json();
+      const json = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao processar doação de roupas');
+      if (!res.ok) {
+        throw new Error(json.message || 'Erro ao processar doação');
       }
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Doação registrada com sucesso!',
-        text: 'Obrigado por contribuir com roupas para quem precisa!',
-        confirmButtonColor: '#3085d6'
-      });
-
-      // Resetar formulário após sucesso
-      setFormData({
-        nome: '',
-        email: '',
-        tipo: '',
-        quantidade: 1,
-        tamanho: ''
-      });
+      // Se a resposta incluir uma URL de redirecionamento
+      if (json.redirectUrl) {
+        window.location.href = json.redirectUrl;
+      } else {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Doação realizada com sucesso!',
+          text: 'Obrigado por sua contribuição!',
+          confirmButtonColor: '#3085d6',
+          timer: 3000,
+          timerProgressBar: true,
+          willClose: () => {
+            window.location.href = '/doacao/sucesso';
+          }
+        });
+      }
 
     } catch (err) {
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err.message || 'Ocorreu um erro ao enviar sua doação',
+        text: err.message || 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
       console.error('Erro na doação:', err);
@@ -185,38 +146,26 @@ const Clothes: React.FC = () => {
         <form className="donation-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="nome">Nome Completo</label>
-            <input 
-              type="text" 
-              id="nome" 
-              name="nome" 
-              value={formData.nome}
-              onChange={handleChange}
-              required 
+            <input
+              id="donationName"
+              name="donationName"
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="email">E-mail</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              value={formData.email}
-              onChange={handleChange}
-              required 
+            <input
+              id="donationEmail"
+              name="donationEmail"
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="tipo">Tipo de Roupa</label>
             <input
-              type="text"
-              id="tipo"
-              name="tipo"
+              id="donationType"
+              name="donationType"
               placeholder="Ex: Camisetas, Calças"
-              value={formData.tipo}
-              onChange={handleChange}
-              required
             />
           </div>
 
@@ -225,22 +174,17 @@ const Clothes: React.FC = () => {
               <label htmlFor="quantidade">Quantidade</label>
               <input
                 type="number"
-                id="quantidade"
-                name="quantidade"
+                id="donationQuantity"
+                name="donationQuantity"
                 min="1"
-                value={formData.quantidade}
-                onChange={handleChange}
-                required
               />
             </div>
 
             <div className="form-group">
               <label htmlFor="tamanho">Tamanho</label>
-              <select 
-                id="tamanho" 
-                name="tamanho"
-                value={formData.tamanho}
-                onChange={handleChange}
+              <select
+                id="donationSize"
+                name="donationSize"
               >
                 <option value="">Selecione</option>
                 <option value="P">P</option>
@@ -251,8 +195,8 @@ const Clothes: React.FC = () => {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-donation"
             disabled={loading}
           >
