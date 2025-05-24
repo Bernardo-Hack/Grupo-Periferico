@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
 import '../../layouts/style/profileCSS.css';
-
 
 interface Doacao {
   id: number;
@@ -21,23 +21,37 @@ const Profile: React.FC = () => {
     user?: UserProfile;
     doacoes?: Doacao[];
   }>({});
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('http://localhost:5000/user/profile', {
-      method : 'GET',
+      method: 'GET',
       credentials: 'include',
     })
       .then(res => {
-        if (!res.ok) throw new Error('Não autorizado');
+        if (res.status === 401) {
+          // Usuário não autenticado, redirecionar para login
+          navigate('/registro');
+          return null;
+        }
+        if (!res.ok) throw new Error('Erro ao carregar perfil');
         return res.json();
       })
-      .then(data => setProfile(data))
-      .catch(err => console.error('Erro ao buscar perfil:', err));
-  }, []);
+      .then(data => {
+        if (data) setProfile(data);
+      })
+      .catch(err => {
+        console.error('Erro ao buscar perfil:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [navigate]);
 
   const { user, doacoes } = profile;
 
-  if (!user) {
+  if (loading) {
     return <div>Carregando perfil...</div>;
   }
 
@@ -48,9 +62,9 @@ const Profile: React.FC = () => {
         <div className="header-content">
           <div className="profile-info">
             <div className="user-details">
-              <h1>{user.nome}</h1>
-              <p>Telefone: {user.telefone}</p>
-              <p>Membro desde: {user.data_cadastro}</p>
+              <h1>{user?.nome}</h1>
+              <p>Telefone: {user?.telefone}</p>
+              <p>Membro desde: {user?.data_cadastro}</p>
             </div>
           </div>
         </div>
