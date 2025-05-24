@@ -18,8 +18,8 @@ const Monetary: React.FC = () => {
     const donationPayment = (document.getElementById('donationPayment') as HTMLInputElement)?.value;
 
     if (!donationName || !donationEmail || !donationValue || !donationPayment) {
-        return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
-      }
+      return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
+    }
 
     if (!donationEmail || !validarEmail(donationEmail)) {
       return Swal.fire('Erro', 'Insira um e-mail válido.', 'error');
@@ -70,7 +70,7 @@ const Monetary: React.FC = () => {
           }
         });
       }
-      
+
     } catch (err) {
       await Swal.fire({
         icon: 'error',
@@ -100,7 +100,7 @@ const Monetary: React.FC = () => {
         <form className="donation-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="donationName">Nome Completo</label>
-            <input 
+            <input
               id="donationName"
               autoComplete="name"
             />
@@ -114,20 +114,20 @@ const Monetary: React.FC = () => {
 
           <div className="form-group">
             <label htmlFor="donationValue">Valor (R$)</label>
-            <input 
-              type="number" 
-              id="donationValue" 
+            <input
+              type="number"
+              id="donationValue"
               name="valor"
-              min="1" 
-              step="0.01" 
+              min="1"
+              step="0.01"
               autoComplete="transaction-amount"
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="donationPayment">Método de Pagamento</label>
-            <select 
-              id="donationPayment" 
+            <select
+              id="donationPayment"
               name="donationPayment"
               autoComplete="cc-type"
             >
@@ -138,8 +138,8 @@ const Monetary: React.FC = () => {
             </select>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-donation"
             disabled={loading}
           >
