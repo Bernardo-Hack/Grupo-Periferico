@@ -1,130 +1,87 @@
-// src/frontend/pages/donations/Foods.tsx
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import { Footer } from '../../layouts/shared/footer';
 import '../../layouts/style/donations_global.css';
 import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
-interface FoodDonationForm {
-  nome: string;
-  email: string;
-  tipo: string;
-  quantidade: number;
-}
 
 const Foods: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<FoodDonationForm>({
-    nome: '',
-    email: '',
-    tipo: '',
-    quantidade: 0.1
-  });
-  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'quantidade' ? parseFloat(value) || 0 : value
-    }));
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.nome.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira seu nome completo',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira um e-mail válido',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    if (!formData.tipo.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, informe o tipo de alimento',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    if (formData.quantidade <= 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira uma quantidade válida',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-
-    return true;
-  };
+  const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
+
+    const donationName = (document.getElementById('donationName') as HTMLInputElement)?.value;
+    const donationEmail = (document.getElementById('donationEmail') as HTMLInputElement)?.value;
+    const donationType = (document.getElementById('donationType') as HTMLInputElement)?.value;
+    const donationQuantity = (document.getElementById('donationQauntity') as HTMLInputElement)?.value;
+
+    if (!donationName || !donationEmail || !donationType || !donationQuantity) {
+      return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
     }
 
-    setLoading(true);
+    if (!donationName) {
+      return Swal.fire('Erro', 'Insira um nome.', 'error');
+    }
+
+    if (!donationEmail || !validarEmail(donationEmail)) {
+      return Swal.fire('Erro', 'Insira um e-mail válido.', 'error');
+    }
+
+    if (!donationType) {
+      return Swal.fire('Erro', 'Insira um alimento válido.', 'error');
+    }
+
+    if (!donationQuantity) {
+      return Swal.fire('Erro', 'Insira uma quantidade válida.', 'error');
+    }
 
     try {
-      const response = await fetch('http://localhost:5000/api/doacoes/alimentos', {
+      const res = await fetch('http://localhost:5000/api/doacoes/alimentos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          nome: formData.nome,
-          email: formData.email,
-          tipo: formData.tipo,
-          quantidade: formData.quantidade
+          nome: donationName,
+          email: donationEmail,
+          quantidade: donationQuantity,
+          tipo: donationType
         }),
         credentials: 'include'
       });
 
-      const data = await response.json();
+      const json = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao processar doação de alimentos');
+      if (!res.ok) {
+        throw new Error(json.message || 'Erro ao processar doação');
       }
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Doação registrada com sucesso!',
-        text: 'Obrigado por contribuir com alimentos para quem precisa!',
-        confirmButtonColor: '#3085d6'
-      });
-
-      // Resetar formulário após sucesso
-      setFormData({
-        nome: '',
-        email: '',
-        tipo: '',
-        quantidade: 0.1
-      });
+      // Se a resposta incluir uma URL de redirecionamento
+      if (json.redirectUrl) {
+        window.location.href = json.redirectUrl;
+      } else {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Doação realizada com sucesso!',
+          text: 'Obrigado por sua contribuição!',
+          confirmButtonColor: '#3085d6',
+          timer: 3000,
+          timerProgressBar: true,
+          willClose: () => {
+            window.location.href = '/doacao/sucesso';
+          }
+        });
+      }
 
     } catch (err) {
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err.message || 'Ocorreu um erro ao enviar sua doação',
+        text: err.message || 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
       console.error('Erro na doação:', err);
@@ -185,38 +142,26 @@ const Foods: React.FC = () => {
         <form className="donation-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="nome">Nome Completo</label>
-            <input 
-              type="text" 
-              id="nome" 
-              name="nome" 
-              value={formData.nome}
-              onChange={handleChange}
-              required 
+            <input
+              id="donationName"
+              name="donationName"
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="email">E-mail</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              value={formData.email}
-              onChange={handleChange}
-              required 
+            <input
+              id="donationEmail"
+              name="donationEmail"
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="tipo">Tipo de Alimento</label>
             <input
-              type="text"
-              id="tipo"
-              name="tipo"
+              id="donationType"
+              name="donationType"
               placeholder="Ex: Arroz, Feijão"
-              value={formData.tipo}
-              onChange={handleChange}
-              required
             />
           </div>
 
@@ -224,18 +169,15 @@ const Foods: React.FC = () => {
             <label htmlFor="quantidade">Quantidade (kg)</label>
             <input
               type="number"
-              id="quantidade"
-              name="quantidade"
+              id="donationQuantity"
+              name="donationQuantity"
               min="0.1"
               step="0.1"
-              value={formData.quantidade}
-              onChange={handleChange}
-              required
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-donation"
             disabled={loading}
           >
