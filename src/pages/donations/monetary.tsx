@@ -2,97 +2,61 @@ import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import '../../layouts/style/donations_global.css';
 import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 const Monetary: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    valor: '',
-    metodo_pagamento: '',
-    nome: '',
-    email: ''
-  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const validateForm = () => {
-    if (!formData.nome.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira seu nome completo',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira um e-mail válido',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-    if (!formData.valor || parseFloat(formData.valor) <= 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, insira um valor válido',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-    if (!formData.metodo_pagamento) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Por favor, selecione um método de pagamento',
-        confirmButtonColor: '#3085d6'
-      });
-      return false;
-    }
-    return true;
-  };
+  const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
+
+    const donationName = (document.getElementById('donationName') as HTMLInputElement)?.value;
+    const donationEmail = (document.getElementById('donationEmail') as HTMLInputElement)?.value;
+    const donationValue = (document.getElementById('donationValue') as HTMLInputElement)?.value;
+    const donationPayment = (document.getElementById('donationPayment') as HTMLInputElement)?.value;
+
+    if (!donationName || !donationEmail || !donationValue || !donationPayment) {
+        return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
+      }
+
+    if (!donationEmail || !validarEmail(donationEmail)) {
+      return Swal.fire('Erro', 'Insira um e-mail válido.', 'error');
     }
 
-    setLoading(true);
+    if (!donationValue) {
+      return Swal.fire('Erro', 'Insira um valor.', 'error');
+    }
+
+    if (!donationPayment) {
+      return Swal.fire('Erro', 'Selecione um método de pagamento.', 'error');
+    }
 
     try {
-      const response = await fetch('http://localhost:5000/api/doacoes/dinheiro', {
+      const res = await fetch('http://localhost:5000/api/doacoes/dinheiro', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          valor: parseFloat(formData.valor),
-          metodo_pagamento: formData.metodo_pagamento,
-          nome: formData.nome,
-          email: formData.email
+          nome: donationName,
+          email: donationEmail,
+          valor: parseFloat(donationPayment),
+          metodo_pagamento: donationValue
         }),
         credentials: 'include'
       });
 
-      const data = await response.json();
+      const json = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao processar doação');
+      if (!res.ok) {
+        throw new Error(json.message || 'Erro ao processar doação');
       }
 
       // Se a resposta incluir uma URL de redirecionamento
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
+      if (json.redirectUrl) {
+        window.location.href = json.redirectUrl;
       } else {
         await Swal.fire({
           icon: 'success',
@@ -135,55 +99,37 @@ const Monetary: React.FC = () => {
         <h2>Faça sua doação</h2>
         <form className="donation-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="nome">Nome Completo</label>
+            <label htmlFor="donationName">Nome Completo</label>
             <input 
-              type="text" 
-              id="nome" 
-              name="nome" 
-              value={formData.nome}
-              onChange={handleChange}
+              id="donationName"
               autoComplete="name"
-              required 
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">E-mail</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              value={formData.email}
-              onChange={handleChange}
-              autoComplete="email"
-              required 
+            <label htmlFor="donationEmail">E-mail</label>
+            <input id="donationEmail" autoComplete="email"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="valor">Valor (R$)</label>
+            <label htmlFor="donationValue">Valor (R$)</label>
             <input 
               type="number" 
-              id="valor" 
-              name="valor" 
-              value={formData.valor}
-              onChange={handleChange}
+              id="donationValue" 
+              name="valor"
               min="1" 
               step="0.01" 
               autoComplete="transaction-amount"
-              required 
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="metodo_pagamento">Método de Pagamento</label>
+            <label htmlFor="donationPayment">Método de Pagamento</label>
             <select 
-              id="metodo_pagamento" 
-              name="metodo_pagamento" 
-              value={formData.metodo_pagamento}
-              onChange={handleChange}
+              id="donationPayment" 
+              name="donationPayment"
               autoComplete="cc-type"
-              required
             >
               <option value="">Selecione</option>
               <option value="pix">PIX</option>
