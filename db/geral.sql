@@ -1,9 +1,9 @@
-drop database grupo_periferico;
-create database grupo_periferico;
-use grupo_periferico;
+-- ===========================
+-- Criação das tabelas
+-- ===========================
 
 CREATE TABLE Usuario (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     cpf VARCHAR(14) UNIQUE NOT NULL,
     telefone VARCHAR(20),
@@ -12,27 +12,24 @@ CREATE TABLE Usuario (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela separada para administradores
 CREATE TABLE Administrador (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela de doações financeiras
 CREATE TABLE DoacaoDinheiro (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     usuario_id INT NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     data_doacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    metodo_pagamento ENUM('pix', 'cartao', 'boleto') NOT NULL,
+    metodo_pagamento VARCHAR(10) NOT NULL CHECK (metodo_pagamento IN ('pix', 'cartao', 'boleto')),
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
--- Tabela de doações de roupas
 CREATE TABLE DoacaoRoupa (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     usuario_id INT NOT NULL,
     tipo VARCHAR(50) NOT NULL,
     quantidade INT NOT NULL,
@@ -41,9 +38,8 @@ CREATE TABLE DoacaoRoupa (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
--- Tabela de doações de alimentos
 CREATE TABLE DoacaoAlimento (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     usuario_id INT NOT NULL,
     tipo VARCHAR(50) NOT NULL,
     quantidade_kg DECIMAL(5,2) NOT NULL,
@@ -51,11 +47,10 @@ CREATE TABLE DoacaoAlimento (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
--- Tabela de distribuição de recursos (referência para administradores)
 CREATE TABLE Distribuicao (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     doacao_id INT NOT NULL,
-    tipo_doacao ENUM('dinheiro', 'roupa', 'alimento') NOT NULL,
+    tipo_doacao VARCHAR(10) NOT NULL CHECK (tipo_doacao IN ('dinheiro', 'roupa', 'alimento')),
     data_distribuicao DATE NOT NULL,
     admin_id INT NOT NULL,
     usuario_voluntario_id INT,
@@ -63,9 +58,8 @@ CREATE TABLE Distribuicao (
     FOREIGN KEY (usuario_voluntario_id) REFERENCES Usuario(id)
 );
 
--- Tabela de certificados
 CREATE TABLE Certificado (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     usuario_id INT NOT NULL,
     distribuicao_id INT NOT NULL,
     data_emissao DATE NOT NULL,
@@ -73,9 +67,9 @@ CREATE TABLE Certificado (
     FOREIGN KEY (distribuicao_id) REFERENCES Distribuicao(id)
 );
 
--- ================================
--- ÍNDICES
--- ================================
+-- ===========================
+-- Índices
+-- ===========================
 
 CREATE INDEX idx_usuario_cpf ON Usuario(cpf);
 CREATE INDEX idx_usuario_nascimento ON Usuario(data_nascimento);
@@ -96,58 +90,329 @@ CREATE INDEX idx_distribuicao_data ON Distribuicao(data_distribuicao);
 CREATE INDEX idx_certificado_usuario ON Certificado(usuario_id);
 CREATE INDEX idx_certificado_data ON Certificado(data_emissao);
 
--- ================================
--- TRIGGERS
--- ================================
+-- ===========================
+-- Inserções de dados
+-- ===========================
+-- Inserindo 50 usuários
+INSERT INTO Usuario (nome, cpf, telefone, senha_hash, data_nascimento, data_cadastro) VALUES
+('João Silva', '111.111.111-11', '(11) 99999-9999', 'hash123', '1990-01-15', '2023-01-01 10:00:00'),
+('Maria Oliveira', '222.222.222-22', '(11) 88888-8888', 'hash456', '1985-05-20', '2023-01-02 11:30:00'),
+('Carlos Souza', '333.333.333-33', '(11) 77777-7777', 'hash789', '1995-08-12', '2023-01-03 09:15:00'),
+('Ana Santos', '444.444.444-44', '(11) 66666-6666', 'hash101', '1988-11-25', '2023-01-04 14:20:00'),
+('Pedro Costa', '555.555.555-55', '(11) 55555-5555', 'hash112', '1992-03-30', '2023-01-05 16:45:00'),
+('Mariana Lima', '666.666.666-66', '(11) 44444-4444', 'hash131', '1987-07-18', '2023-01-06 08:30:00'),
+('Lucas Pereira', '777.777.777-77', '(11) 33333-3333', 'hash415', '1993-09-05', '2023-01-07 12:00:00'),
+('Juliana Alves', '888.888.888-88', '(11) 22222-2222', 'hash161', '1991-12-10', '2023-01-08 15:30:00'),
+('Fernando Gomes', '999.999.999-99', '(11) 11111-1111', 'hash718', '1989-04-22', '2023-01-09 10:45:00'),
+('Patricia Nunes', '123.456.789-00', '(11) 12121-2121', 'hash192', '1994-06-15', '2023-01-10 09:00:00'),
+('Ricardo Martins', '234.567.890-11', '(11) 23232-3232', 'hash021', '1986-02-28', '2023-01-11 11:15:00'),
+('Amanda Rocha', '345.678.901-22', '(11) 34343-4343', 'hash223', '1996-10-08', '2023-01-12 14:30:00'),
+('Roberto Ferreira', '456.789.012-33', '(11) 45454-5454', 'hash424', '1984-08-17', '2023-01-13 16:45:00'),
+('Tatiana Dias', '567.890.123-44', '(11) 56565-6565', 'hash526', '1997-05-03', '2023-01-14 08:00:00'),
+('Marcos Barbosa', '678.901.234-55', '(11) 67676-7676', 'hash627', '1983-01-19', '2023-01-15 10:15:00'),
+('Camila Castro', '789.012.345-66', '(11) 78787-8787', 'hash728', '1998-07-24', '2023-01-16 12:30:00'),
+('Gustavo Cardoso', '890.123.456-77', '(11) 89898-9898', 'hash829', '1982-11-11', '2023-01-17 14:45:00'),
+('Isabela Moreira', '901.234.567-88', '(11) 90909-0909', 'hash930', '1999-09-09', '2023-01-18 16:00:00'),
+('Felipe Ribeiro', '012.345.678-99', '(11) 01010-1010', 'hash031', '1981-04-07', '2023-01-19 08:15:00'),
+('Larissa Campos', '123.123.123-12', '(11) 12123-2323', 'hash132', '2000-12-31', '2023-01-20 10:30:00'),
+('Eduardo Lopes', '234.234.234-23', '(11) 23234-3434', 'hash233', '1980-03-25', '2023-01-21 12:45:00'),
+('Vanessa Mendes', '345.345.345-34', '(11) 34345-4545', 'hash334', '2001-02-14', '2023-01-22 14:00:00'),
+('Rodrigo Azevedo', '456.456.456-45', '(11) 45456-5656', 'hash435', '1979-06-09', '2023-01-23 16:15:00'),
+('Cristina Teixeira', '567.567.567-56', '(11) 56567-6767', 'hash536', '2002-08-22', '2023-01-24 08:30:00'),
+('Bruno Monteiro', '678.678.678-67', '(11) 67678-7878', 'hash637', '1978-10-05', '2023-01-25 10:45:00'),
+('Daniela Andrade', '789.789.789-78', '(11) 78789-8989', 'hash738', '2003-01-18', '2023-01-26 12:00:00'),
+('Alexandre Pires', '890.890.890-89', '(11) 89890-9090', 'hash839', '1977-05-30', '2023-01-27 14:15:00'),
+('Laura Duarte', '901.901.901-90', '(11) 90901-0101', 'hash940', '2004-07-12', '2023-01-28 16:30:00'),
+('Hugo Cunha', '012.012.012-01', '(11) 01012-1212', 'hash041', '1976-09-27', '2023-01-29 08:45:00'),
+('Sandra Farias', '123.234.345-45', '(11) 12123-3434', 'hash142', '2005-11-08', '2023-01-30 10:00:00'),
+('Diego Bezerra', '234.345.456-56', '(11) 23234-4545', 'hash243', '1975-12-19', '2023-01-31 12:15:00'),
+('Renata Vasconcelos', '345.456.567-67', '(11) 34345-5656', 'hash344', '2006-04-01', '2023-02-01 14:30:00'),
+('Leonardo Brito', '456.567.678-78', '(11) 45456-6767', 'hash445', '1974-02-10', '2023-02-02 16:45:00'),
+('Viviane Peixoto', '567.678.789-89', '(11) 56567-7878', 'hash546', '2007-06-23', '2023-02-03 08:00:00'),
+('Paulo Albuquerque', '678.789.890-90', '(11) 67678-8989', 'hash647', '1973-08-04', '2023-02-04 10:15:00'),
+('Luciana Siqueira', '789.890.901-01', '(11) 78789-9090', 'hash748', '2008-10-17', '2023-02-05 12:30:00'),
+('Rafael Tavares', '890.901.012-12', '(11) 89890-0101', 'hash849', '1972-01-28', '2023-02-06 14:45:00'),
+('Elaine Morais', '901.012.123-23', '(11) 90901-1212', 'hash950', '2009-03-11', '2023-02-07 16:00:00'),
+('André Barros', '012.123.234-34', '(11) 01012-2323', 'hash051', '1971-05-24', '2023-02-08 08:15:00'),
+('Simone Dantas', '123.345.567-78', '(11) 12123-4545', 'hash152', '2010-07-07', '2023-02-09 10:30:00'),
+('Maurício Freitas', '234.456.678-89', '(11) 23234-5656', 'hash253', '1970-09-20', '2023-02-10 12:45:00'),
+('Alice Borges', '345.567.789-90', '(11) 34345-6767', 'hash354', '2011-11-03', '2023-02-11 14:00:00'),
+('Igor Medeiros', '456.678.890-01', '(11) 45456-7878', 'hash455', '1969-12-16', '2023-02-12 16:15:00'),
+('Adriana Veloso', '567.789.901-12', '(11) 56567-8989', 'hash556', '2012-02-29', '2023-02-13 08:30:00'),
+('Oswaldo Leite', '678.890.012-23', '(11) 67678-9090', 'hash657', '1968-04-12', '2023-02-14 10:45:00'),
+('Cecília Maciel', '789.901.123-34', '(11) 78789-0101', 'hash758', '2013-06-25', '2023-02-15 12:00:00'),
+('Marcelo Paiva', '890.012.234-45', '(11) 89890-1212', 'hash859', '1967-08-08', '2023-02-16 14:15:00'),
+('Helena Queiroz', '901.123.345-56', '(11) 90901-2323', 'hash960', '2014-10-21', '2023-02-17 16:30:00'),
+('Sérgio Rios', '012.234.456-67', '(11) 01012-3434', 'hash071', '1966-12-04', '2023-02-18 08:45:00'),
+('Yasmin Galvão', '123.456.678-89', '(11) 12123-5656', 'hash172', '2015-01-17', '2023-02-19 10:00:00'),
+('Raul Xavier', '234.567.789-90', '(11) 23234-6767', 'hash273', '1965-03-02', '2023-02-20 12:15:00');
 
-DELIMITER //
+-- Inserindo 50 administradores
+INSERT INTO Administrador (nome, senha_hash, data_cadastro) VALUES
+('Italo', '123', '2023-01-01 08:00:00'),
+('admin', '456', '2023-01-02 09:00:00'),
 
-CREATE TRIGGER trg_valida_data_nascimento BEFORE INSERT ON Usuario
-FOR EACH ROW
-BEGIN
-    IF NEW.data_nascimento > CURDATE() THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Data de nascimento não pode ser no futuro';
-    END IF;
-END;//
+-- Inserindo 50 doações de dinheiro
+INSERT INTO DoacaoDinheiro (usuario_id, valor, data_doacao, metodo_pagamento) VALUES
+(1, 100.00, '2023-01-05 10:00:00', 'pix'),
+(2, 50.00, '2023-01-06 11:30:00', 'cartao'),
+(3, 200.00, '2023-01-07 09:15:00', 'boleto'),
+(4, 75.00, '2023-01-08 14:20:00', 'pix'),
+(5, 150.00, '2023-01-09 16:45:00', 'cartao'),
+(6, 80.00, '2023-01-10 08:30:00', 'boleto'),
+(7, 300.00, '2023-01-11 12:00:00', 'pix'),
+(8, 120.00, '2023-01-12 15:30:00', 'cartao'),
+(9, 90.00, '2023-01-13 10:45:00', 'boleto'),
+(10, 250.00, '2023-01-14 09:00:00', 'pix'),
+(11, 60.00, '2023-01-15 11:15:00', 'cartao'),
+(12, 180.00, '2023-01-16 14:30:00', 'boleto'),
+(13, 95.00, '2023-01-17 16:45:00', 'pix'),
+(14, 220.00, '2023-01-18 08:00:00', 'cartao'),
+(15, 110.00, '2023-01-19 10:15:00', 'boleto'),
+(16, 350.00, '2023-01-20 12:30:00', 'pix'),
+(17, 70.00, '2023-01-21 14:45:00', 'cartao'),
+(18, 400.00, '2023-01-22 16:00:00', 'boleto'),
+(19, 130.00, '2023-01-23 08:15:00', 'pix'),
+(20, 280.00, '2023-01-24 10:30:00', 'cartao'),
+(21, 65.00, '2023-01-25 12:45:00', 'boleto'),
+(22, 190.00, '2023-01-26 14:00:00', 'pix'),
+(23, 85.00, '2023-01-27 16:15:00', 'cartao'),
+(24, 240.00, '2023-01-28 08:30:00', 'boleto'),
+(25, 105.00, '2023-01-29 10:45:00', 'pix'),
+(26, 380.00, '2023-01-30 12:00:00', 'cartao'),
+(27, 55.00, '2023-01-31 14:15:00', 'boleto'),
+(28, 420.00, '2023-02-01 16:30:00', 'pix'),
+(29, 140.00, '2023-02-02 08:45:00', 'cartao'),
+(30, 310.00, '2023-02-03 10:00:00', 'boleto'),
+(31, 72.00, '2023-02-04 12:15:00', 'pix'),
+(32, 210.00, '2023-02-05 14:30:00', 'cartao'),
+(33, 92.00, '2023-02-06 16:45:00', 'boleto'),
+(34, 260.00, '2023-02-07 08:00:00', 'pix'),
+(35, 115.00, '2023-02-08 10:15:00', 'cartao'),
+(36, 390.00, '2023-02-09 12:30:00', 'boleto'),
+(37, 62.00, '2023-02-10 14:45:00', 'pix'),
+(38, 430.00, '2023-02-11 16:00:00', 'cartao'),
+(39, 145.00, '2023-02-12 08:15:00', 'boleto'),
+(40, 320.00, '2023-02-13 10:30:00', 'pix'),
+(41, 78.00, '2023-02-14 12:45:00', 'cartao'),
+(42, 230.00, '2023-02-15 14:00:00', 'boleto'),
+(43, 98.00, '2023-02-16 16:15:00', 'pix'),
+(44, 270.00, '2023-02-17 08:30:00', 'cartao'),
+(45, 125.00, '2023-02-18 10:45:00', 'boleto'),
+(46, 410.00, '2023-02-19 12:00:00', 'pix'),
+(47, 68.00, '2023-02-20 14:15:00', 'cartao'),
+(48, 440.00, '2023-02-21 16:30:00', 'boleto'),
+(49, 155.00, '2023-02-22 08:45:00', 'pix'),
+(50, 330.00, '2023-02-23 10:00:00', 'cartao');
 
-CREATE TRIGGER trg_atualiza_estoque_alimento AFTER INSERT ON DoacaoAlimento
-FOR EACH ROW
-BEGIN
-    INSERT INTO EstoqueAlimentos (tipo_alimento, quantidade_kg, ultima_atualizacao)
-    VALUES (NEW.tipo, NEW.quantidade_kg, NOW())
-    ON DUPLICATE KEY UPDATE
-        quantidade_kg = quantidade_kg + NEW.quantidade_kg,
-        ultima_atualizacao = NOW();
-END;//
+-- Inserindo 50 doações de roupas
+INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao) VALUES
+(1, 'Camiseta', 5, 'M', '2023-01-05 10:30:00'),
+(2, 'Calça', 2, 'G', '2023-01-06 11:45:00'),
+(3, 'Casaco', 3, 'GG', '2023-01-07 09:30:00'),
+(4, 'Bermuda', 4, 'P', '2023-01-08 14:35:00'),
+(5, 'Blusa', 6, 'M', '2023-01-09 17:00:00'),
+(6, 'Jaqueta', 1, 'G', '2023-01-10 08:45:00'),
+(7, 'Vestido', 2, 'M', '2023-01-11 12:15:00'),
+(8, 'Saia', 3, 'P', '2023-01-12 15:45:00'),
+(9, 'Moletom', 4, 'GG', '2023-01-13 11:00:00'),
+(10, 'Camisa', 5, 'G', '2023-01-14 09:15:00'),
+(11, 'Shorts', 2, 'M', '2023-01-15 11:30:00'),
+(12, 'Suéter', 3, 'P', '2023-01-16 14:45:00'),
+(13, 'Meias', 10, 'Único', '2023-01-17 17:00:00'),
+(14, 'Cueca', 8, 'M', '2023-01-18 08:15:00'),
+(15, 'Sutiã', 5, 'P', '2023-01-19 10:30:00'),
+(16, 'Pijama', 2, 'G', '2023-01-20 12:45:00'),
+(17, 'Roupa íntima', 7, 'M', '2023-01-21 15:00:00'),
+(18, 'Camiseta', 4, 'GG', '2023-01-22 16:15:00'),
+(19, 'Calça', 3, 'P', '2023-01-23 08:30:00'),
+(20, 'Casaco', 2, 'G', '2023-01-24 10:45:00'),
+(21, 'Bermuda', 5, 'M', '2023-01-25 13:00:00'),
+(22, 'Blusa', 6, 'P', '2023-01-26 14:15:00'),
+(23, 'Jaqueta', 1, 'GG', '2023-01-27 16:30:00'),
+(24, 'Vestido', 3, 'M', '2023-01-28 08:45:00'),
+(25, 'Saia', 4, 'G', '2023-01-29 11:00:00'),
+(26, 'Moletom', 2, 'P', '2023-01-30 12:15:00'),
+(27, 'Camisa', 5, 'M', '2023-01-31 14:30:00'),
+(28, 'Shorts', 3, 'GG', '2023-02-01 16:45:00'),
+(29, 'Suéter', 4, 'G', '2023-02-02 09:00:00'),
+(30, 'Meias', 12, 'Único', '2023-02-03 10:15:00'),
+(31, 'Cueca', 6, 'M', '2023-02-04 12:30:00'),
+(32, 'Sutiã', 4, 'P', '2023-02-05 14:45:00'),
+(33, 'Pijama', 3, 'G', '2023-02-06 17:00:00'),
+(34, 'Roupa íntima', 8, 'M', '2023-02-07 08:15:00'),
+(35, 'Camiseta', 7, 'GG', '2023-02-08 10:30:00'),
+(36, 'Calça', 2, 'P', '2023-02-09 12:45:00'),
+(37, 'Casaco', 1, 'G', '2023-02-10 15:00:00'),
+(38, 'Bermuda', 4, 'M', '2023-02-11 16:15:00'),
+(39, 'Blusa', 5, 'P', '2023-02-12 08:30:00'),
+(40, 'Jaqueta', 2, 'GG', '2023-02-13 10:45:00'),
+(41, 'Vestido', 3, 'M', '2023-02-14 13:00:00'),
+(42, 'Saia', 4, 'G', '2023-02-15 15:15:00'),
+(43, 'Moletom', 3, 'P', '2023-02-16 17:30:00'),
+(44, 'Camisa', 6, 'M', '2023-02-17 08:45:00'),
+(45, 'Shorts', 2, 'GG', '2023-02-18 11:00:00'),
+(46, 'Suéter', 1, 'G', '2023-02-19 13:15:00'),
+(47, 'Meias', 15, 'Único', '2023-02-20 15:30:00'),
+(48, 'Cueca', 10, 'M', '2023-02-21 17:45:00'),
+(49, 'Sutiã', 6, 'P', '2023-02-22 09:00:00'),
+(50, 'Pijama', 4, 'G', '2023-02-23 11:15:00');
 
-CREATE TRIGGER trg_gera_certificado_distribuicao AFTER INSERT ON Distribuicao
-FOR EACH ROW
-BEGIN
-    DECLARE doador_id INT;
+-- Inserindo 50 doações de alimentos
+INSERT INTO DoacaoAlimento (usuario_id, tipo, quantidade_kg, data_doacao) VALUES
+(1, 'Arroz', 5.00, '2023-01-05 11:00:00'),
+(2, 'Feijão', 3.00, '2023-01-06 12:00:00'),
+(3, 'Macarrão', 4.00, '2023-01-07 10:00:00'),
+(4, 'Açúcar', 2.00, '2023-01-08 15:00:00'),
+(5, 'Óleo', 6.00, '2023-01-09 17:30:00'),
+(6, 'Farinha', 3.50, '2023-01-10 09:00:00'),
+(7, 'Leite', 10.00, '2023-01-11 12:30:00'),
+(8, 'Café', 2.50, '2023-01-12 16:00:00'),
+(9, 'Bolacha', 4.00, '2023-01-13 11:30:00'),
+(10, 'Enlatados', 7.00, '2023-01-14 09:30:00'),
+(11, 'Sal', 1.00, '2023-01-15 12:00:00'),
+(12, 'Cereal', 3.00, '2023-01-16 15:00:00'),
+(13, 'Frutas', 8.00, '2023-01-17 17:30:00'),
+(14, 'Legumes', 6.00, '2023-01-18 08:30:00'),
+(15, 'Verduras', 5.00, '2023-01-19 11:00:00'),
+(16, 'Carnes', 4.00, '2023-01-20 13:00:00'),
+(17, 'Ovos', 2.50, '2023-01-21 15:30:00'),
+(18, 'Queijo', 3.00, '2023-01-22 16:30:00'),
+(19, 'Presunto', 2.00, '2023-01-23 09:00:00'),
+(20, 'Pão', 5.00, '2023-01-24 11:30:00'),
+(21, 'Biscoitos', 4.00, '2023-01-25 13:30:00'),
+(22, 'Chocolate', 1.50, '2023-01-26 14:30:00'),
+(23, 'Refrigerante', 6.00, '2023-01-27 16:45:00'),
+(24, 'Suco', 5.00, '2023-01-28 09:15:00'),
+(25, 'Água', 10.00, '2023-01-29 11:30:00'),
+(26, 'Temperos', 1.00, '2023-01-30 12:30:00'),
+(27, 'Molho', 2.00, '2023-01-31 14:45:00'),
+(28, 'Massas', 3.00, '2023-02-01 17:00:00'),
+(29, 'Grãos', 4.00, '2023-02-02 09:30:00'),
+(30, 'Laticínios', 5.00, '2023-02-03 11:45:00'),
+(31, 'Doces', 2.00, '2023-02-04 13:00:00'),
+(32, 'Salgados', 3.00, '2023-02-05 15:15:00'),
+(33, 'Congelados', 4.00, '2023-02-06 17:30:00'),
+(34, 'Enlatados', 6.00, '2023-02-07 08:45:00'),
+(35, 'Cereais', 3.00, '2023-02-08 11:00:00'),
+(36, 'Barras de cereal', 2.00, '2023-02-09 13:15:00'),
+(37, 'Iogurte', 4.00, '2023-02-10 15:30:00'),
+(38, 'Manteiga', 1.50, '2023-02-11 16:45:00'),
+(39, 'Margarina', 1.50, '2023-02-12 09:00:00'),
+(40, 'Geleia', 2.00, '2023-02-13 11:15:00'),
+(41, 'Mel', 1.00, '2023-02-14 13:30:00'),
+(42, 'Pasta de amendoim', 1.50, '2023-02-15 15:45:00'),
+(43, 'Granola', 2.00, '2023-02-16 18:00:00'),
+(44, 'Farinha láctea', 3.00, '2023-02-17 09:15:00'),
+(45, 'Achocolatado', 2.50, '2023-02-18 11:30:00'),
+(46, 'Leite em pó', 4.00, '2023-02-19 13:45:00'),
+(47, 'Creme de leite', 2.00, '2023-02-20 16:00:00'),
+(48, 'Leite condensado', 3.00, '2023-02-21 18:15:00'),
+(49, 'Fermento', 0.50, '2023-02-22 09:30:00'),
+(50, 'Coco ralado', 1.00, '2023-02-23 11:45:00');
 
-    IF NEW.tipo_doacao = 'dinheiro' THEN
-        SELECT usuario_id INTO doador_id FROM DoacaoDinheiro WHERE id = NEW.doacao_id;
-    ELSEIF NEW.tipo_doacao = 'roupa' THEN
-        SELECT usuario_id INTO doador_id FROM DoacaoRoupa WHERE id = NEW.doacao_id;
-    ELSEIF NEW.tipo_doacao = 'alimento' THEN
-        SELECT usuario_id INTO doador_id FROM DoacaoAlimento WHERE id = NEW.doacao_id;
-    END IF;
+-- Inserindo 50 distribuições
+INSERT INTO Distribuicao (doacao_id, tipo_doacao, data_distribuicao, admin_id, usuario_voluntario_id) VALUES
+(1, 'dinheiro', '2023-01-10', 1, 1),
+(2, 'roupa', '2023-01-11', 1, 2),
+(3, 'alimento', '2023-01-12', 1, 3),
+(4, 'dinheiro', '2023-01-13', 1, 4),
+(5, 'roupa', '2023-01-14', 1, 5),
+(6, 'alimento', '2023-01-15', 1, 6),
+(7, 'dinheiro', '2023-01-16', 1, 7),
+(8, 'roupa', '2023-01-17', 1, 8),
+(9, 'alimento', '2023-01-18', 1, 9),
+(10, 'dinheiro', '2023-01-19', 2, 10),
+(11, 'roupa', '2023-01-20', 2, 11),
+(12, 'alimento', '2023-01-21', 2, 12),
+(13, 'dinheiro', '2023-01-22', 2, 13),
+(14, 'roupa', '2023-01-23', 2, 14),
+(15, 'alimento', '2023-01-24', 2, 15),
+(16, 'dinheiro', '2023-01-25', 2, 16),
+(17, 'roupa', '2023-01-26', 2, 17),
+(18, 'alimento', '2023-01-27', 2, 18),
+(19, 'dinheiro', '2023-01-28', 2, 19),
+(20, 'roupa', '2023-01-29', 2, 20),
+(21, 'alimento', '2023-01-30', 1, 21),
+(22, 'dinheiro', '2023-01-31', 1, 22),
+(23, 'roupa', '2023-02-01', 1, 23),
+(24, 'alimento', '2023-02-02', 1, 24),
+(25, 'dinheiro', '2023-02-03', 1, 25),
+(26, 'roupa', '2023-02-04', 1, 26),
+(27, 'alimento', '2023-02-05', 1, 27),
+(28, 'dinheiro', '2023-02-06', 1, 28),
+(29, 'roupa', '2023-02-07', 1, 29),
+(30, 'alimento', '2023-02-08', 1, 30),
+(31, 'dinheiro', '2023-02-09', 1, 31),
+(32, 'roupa', '2023-02-10', 1, 32),
+(33, 'alimento', '2023-02-11', 1, 33),
+(34, 'dinheiro', '2023-02-12', 1, 34),
+(35, 'roupa', '2023-02-13', 1, 35),
+(36, 'alimento', '2023-02-14', 1, 36),
+(37, 'dinheiro', '2023-02-15', 1, 37),
+(38, 'roupa', '2023-02-16', 1, 38),
+(39, 'alimento', '2023-02-17', 1, 39),
+(40, 'dinheiro', '2023-02-18', 1, 40),
+(41, 'roupa', '2023-02-19', 1, 41),
+(42, 'alimento', '2023-02-20', 1, 42),
+(43, 'dinheiro', '2023-02-21', 1, 43),
+(44, 'roupa', '2023-02-22', 1, 44),
+(45, 'alimento', '2023-02-23', 1, 45),
+(46, 'dinheiro', '2023-02-24', 1, 46),
+(47, 'roupa', '2023-02-25', 1, 47),
+(48, 'alimento', '2023-02-26', 1, 48),
+(49, 'dinheiro', '2023-02-27', 1, 49),
+(50, 'roupa', '2023-02-28', 50, 50);
 
-    IF doador_id IS NOT NULL THEN
-        INSERT INTO Certificado (usuario_id, distribuicao_id, data_emissao)
-        VALUES (doador_id, NEW.id, CURDATE());
-    END IF;
-END;//
-
-CREATE TRIGGER trg_valida_admin_distribuicao BEFORE INSERT ON Distribuicao
-FOR EACH ROW
-BEGIN
-    DECLARE admin_existente INT;
-    SELECT COUNT(*) INTO admin_existente FROM Administrador WHERE id = NEW.admin_id;
-
-    IF admin_existente = 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Apenas administradores podem registrar distribuições';
-    END IF;
-END;//
-
-DELIMITER ;
+-- Inserindo 50 certificados
+INSERT INTO Certificado (usuario_id, distribuicao_id, data_emissao) VALUES
+(1, 101, '2023-01-10'),
+(2, 102, '2023-01-11'),
+(3, 103, '2023-01-12'),
+(4, 104, '2023-01-13'),
+(5, 105, '2023-01-14'),
+(6, 106, '2023-01-15'),
+(7, 107, '2023-01-16'),
+(8, 108, '2023-01-17'),
+(9, 109, '2023-01-18'),
+(10, 110, '2023-01-19'),
+(11, 111, '2023-01-20'),
+(12, 112, '2023-01-21'),
+(13, 113, '2023-01-22'),
+(14, 114, '2023-01-23'),
+(15, 115, '2023-01-24'),
+(16, 116, '2023-01-25'),
+(17, 117, '2023-01-26'),
+(18, 118, '2023-01-27'),
+(19, 119, '2023-01-28'),
+(20, 120, '2023-01-29'),
+(21, 121, '2023-01-30'),
+(22, 122, '2023-01-31'),
+(23, 123, '2023-02-01'),
+(24, 124, '2023-02-02'),
+(25, 125, '2023-02-03'),
+(26, 126, '2023-02-04'),
+(27, 127, '2023-02-05'),
+(28, 128, '2023-02-06'),
+(29, 129, '2023-02-07'),
+(30, 130, '2023-02-08'),
+(31, 131, '2023-02-09'),
+(32, 132, '2023-02-10'),
+(33, 133, '2023-02-11'),
+(34, 134, '2023-02-12'),
+(35, 135, '2023-02-13'),
+(36, 136, '2023-02-14'),
+(37, 137, '2023-02-15'),
+(38, 138, '2023-02-16'),
+(39, 139, '2023-02-17'),
+(40, 140, '2023-02-18'),
+(41, 141, '2023-02-19'),
+(42, 142, '2023-02-20'),
+(43, 143, '2023-02-21'),
+(44, 144, '2023-02-22'),
+(45, 145, '2023-02-23'),
+(46, 146, '2023-02-24'),
+(47, 147, '2023-02-25'),
+(48, 148, '2023-02-26'),
+(49, 149, '2023-02-27'),
+(50, 150, '2023-02-28');

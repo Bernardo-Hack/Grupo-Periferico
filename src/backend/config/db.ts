@@ -1,23 +1,18 @@
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const pool = mysql.createPool({
-  host:     process.env.DB_HOST,
-  user:     process.env.DB_USER,
-  password: process.env.DB_PASSWORD, 
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
 });
+
 (async () => {
   try {
-    const conn = await pool.getConnection(); 
-    console.log(' MySQL pool conectado com sucesso!');
-    conn.release(); 
+    const client = await pool.connect();
+    console.log('📦 PostgreSQL conectado com sucesso via connectionString!');
+    client.release();
   } catch (err) {
-    console.error('❌ Erro ao conectar ao MySQL:', (err as Error).message);
+    console.error('❌ Erro ao conectar ao PostgreSQL:', (err as Error).message);
   }
 })();
 

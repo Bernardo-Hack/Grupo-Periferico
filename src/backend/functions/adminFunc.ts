@@ -1,34 +1,29 @@
-// adminFunc.ts
 import { Router, Request, Response, NextFunction } from 'express';
-import db from '../config/db';
-import { RowDataPacket } from 'mysql2';
+import db from '../config/db'; // Deve ser um pool ou conexão do mysql2/promise
 import { comparePassword } from '../utils/encrypt';
 
 const router = Router();
 
-// AsyncHandler igual ao userFunc.ts
 const asyncHandler = (fn: any) =>
   (req: Request, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch(next);
 
-// Extensão da sessão
 declare module 'express-session' {
   interface SessionData {
     adminId?: number;
   }
 }
 
-// ========== MIDDLEWARES ==========
 export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   req.session.adminId ? next() : res.redirect('/admin/login');
 };
 
-// ========== ROTAS ADMIN ==========
+// Rota de login ajustada para MySQL
 router.get('/admin/:username/:password', asyncHandler(async (req: Request, res: Response) => {
   const { username, password } = req.params;
 
-  const [rows] = await db.query<RowDataPacket[]>(
-    'SELECT id, senha_hash FROM admin WHERE username = ?',
+  const [rows]: any = await db.query(
+    'SELECT id, senha_hash FROM Administrador WHERE nome = ?',
     [username]
   );
 
@@ -44,15 +39,14 @@ router.get('/admin/logout', (req: Request, res: Response) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
-// ========== FUNÇÕES DASHBOARD ==========
 export const loadUser = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [results] = await db.query<RowDataPacket[]>(
-      'SELECT * FROM usuario ORDER BY nome'
+    const [rows]: any = await db.query(
+      'SELECT * FROM Usuario ORDER BY nome'
     );
 
     res.render("admin_dashboard", {
-      usuarios: results || [],
+      usuarios: rows || [],
       currentDate: new Date().toLocaleDateString('pt-BR'),
       pageTitle: "Painel Administrativo"
     });
@@ -64,7 +58,7 @@ export const loadUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [results] = await db.query<RowDataPacket[]>(`
+    const [rows]: any = await db.query(`
       SELECT d.id, u.nome, d.valor, d.metodo_pagamento, d.data_doacao
       FROM DoacaoDinheiro d
       JOIN Usuario u ON d.usuario_id = u.id
@@ -72,7 +66,7 @@ export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
     `);
 
     res.render('admin_doacoes', {
-      doacoes: results,
+      doacoes: rows,
       pageTitle: "Doações em Dinheiro"
     });
   } catch (error) {
@@ -81,7 +75,6 @@ export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// ========== ROTAS PROTEGIDAS ==========
 router.get('/admin/dashboard', adminAuth, loadUser);
 router.get('/admin/doacoes', adminAuth, loadDoacao);
 
