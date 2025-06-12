@@ -2,24 +2,31 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    "jsx": "react-jsx",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".", 
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "types": ["node", "express"],
+    "types": ["node", "jest", "express"],
     "typeRoots": ["./node_modules/@types"],
-    "baseUrl": ".",
+    "baseUrl": ".", 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"]
     },
     "sourceMap": true,
     "removeComments": true,
     "noImplicitAny": false
-    
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "include": [
+    "src/**/*",
+    "tests/**/*",
+    "jest.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
