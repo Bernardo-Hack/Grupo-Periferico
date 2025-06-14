@@ -45,6 +45,7 @@ app.use(session({
 
 // 3) Rotas de API
 // SUAS ROTAS DE API DEVEM VIR ANTES DO CÓDIGO DO FRONTEND
+app.use('/test', testDB); 
 app.use('/user', userRoutes);
 app.get('/adminUserDashboard', loadUser);
 app.get('/adminMonetaryDonationDashboard', loadDoacao);
