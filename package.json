@@ -6,7 +6,12 @@
     "dev:client": "vite",
     "dev:server": "ts-node-dev --respawn --transpile-only src/backend/server.ts",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "vite build",
+    
+    "build:client": "vite build",
+    "build:server": "tsc --project tsconfig.server.json",
+    "build": "npm run build:client && npm run build:server",
+    "start": "node dist/backend/server.js",
+    
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "jest",
