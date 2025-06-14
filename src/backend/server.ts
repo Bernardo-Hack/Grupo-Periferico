@@ -56,7 +56,7 @@ app.use('/test', testDB);
 // <-- 4. CÓDIGO NOVO PARA SERVIR O FRONTEND -->
 // Aponte para a pasta de build do seu frontend (React)
 const frontendPath = path.join(__dirname, '..', '..', 'frontend', 'dist'); // AJUSTE 'frontend' SE O NOME DA SUA PASTA FOR OUTRO
-app.use(express.static(frontendPath));
+app.use(express.static('../../dist'));
 
 // Para qualquer outra rota não encontrada, sirva o index.html do frontend
 // Isso permite que o React Router controle a navegação
