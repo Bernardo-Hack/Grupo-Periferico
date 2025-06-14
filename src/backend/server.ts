@@ -76,6 +76,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // 6) Start
 const PORT = Number(process.env.PORT) || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🔥 Servidor rodando em http://localhost:${PORT}`);
 });
