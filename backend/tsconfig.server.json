@@ -1,0 +1,12 @@
+{
+  "extends": "../frontend/tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node", "jest", "express"],
+    "outDir": "./dist",
+    "noEmit": false
+  },
+  "include": ["src/backend/**/*.ts"],
+  "exclude": ["node_modules", "src/pages", "src/assets", "src/**/*.tsx"]
+}
