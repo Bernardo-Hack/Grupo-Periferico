@@ -4,63 +4,58 @@ import { Footer } from '../../layouts/shared/footer';
 import '../../layouts/style/donations_global.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
-
+import { useTheme } from '../../contexts/ThemeContext'; 
 
 const Foods: React.FC = () => {
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [tipo, setTipo] = useState('');
+  const [quantidade, setQuantidade] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const { theme } = useTheme(); // Obtenha o tema atual
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const quantidadeNum = parseFloat(quantidade);
+    console.log('Valores enviados:', { nome, email, tipo, quantidade, quantidadeNum });
 
-    const donationName = (document.getElementById('donationName') as HTMLInputElement)?.value;
-    const donationEmail = (document.getElementById('donationEmail') as HTMLInputElement)?.value;
-    const donationType = (document.getElementById('donationType') as HTMLInputElement)?.value;
-    const donationQuantity = (document.getElementById('donationQauntity') as HTMLInputElement)?.value;
-
-    if (!donationName || !donationEmail || !donationType || !donationQuantity) {
+    if (!nome || !email || !tipo || !quantidade) {
       return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
     }
-
-    if (!donationName) {
-      return Swal.fire('Erro', 'Insira um nome.', 'error');
-    }
-
-    if (!donationEmail || !validarEmail(donationEmail)) {
+    if (!validarEmail(email)) {
       return Swal.fire('Erro', 'Insira um e-mail válido.', 'error');
     }
-
-    if (!donationType) {
-      return Swal.fire('Erro', 'Insira um alimento válido.', 'error');
+    if (isNaN(quantidadeNum)) {
+      return Swal.fire('Erro', 'Quantidade inválida.', 'error');
+    }
+    if (quantidadeNum <= 0) {
+      return Swal.fire('Erro', 'Quantidade deve ser maior que zero.', 'error');
     }
 
-    if (!donationQuantity) {
-      return Swal.fire('Erro', 'Insira uma quantidade válida.', 'error');
-    }
-
+    setLoading(true);
     try {
       const res = await fetch('http://localhost:5000/api/doacoes/alimentos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          nome: donationName,
-          email: donationEmail,
-          quantidade: donationQuantity,
-          tipo: donationType
+          nome,
+          email,
+          tipo,
+          quantidade: quantidadeNum,
         }),
-        credentials: 'include'
       });
-
       const json = await res.json();
+      console.log('Resposta da API:', json);
 
       if (!res.ok) {
         throw new Error(json.message || 'Erro ao processar doação');
       }
 
-      // Se a resposta incluir uma URL de redirecionamento
       if (json.redirectUrl) {
         window.location.href = json.redirectUrl;
       } else {
@@ -76,22 +71,21 @@ const Foods: React.FC = () => {
           }
         });
       }
-
     } catch (err) {
+      console.error('Erro na doação (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err.message || 'Ocorreu um erro inesperado ao processar sua doação',
+        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
-      console.error('Erro na doação:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="clothesfoods-page">
+    <div className="clothesfoods-page" data-theme={theme}>
       <Navbar />
 
       <header className="donation-header">
@@ -114,23 +108,17 @@ const Foods: React.FC = () => {
         <div className="info-item">
           <i className="fas fa-apple-alt icon"></i>
           <h3>Alimentos que Alimentam</h3>
-          <p>
-            Cada doação garante refeições mais dignas a famílias inteiras.
-          </p>
+          <p>Cada doação garante refeições mais dignas a famílias inteiras.</p>
         </div>
         <div className="info-item">
           <i className="fas fa-seedling icon"></i>
           <h3>Apoio Sustentável</h3>
-          <p>
-            Doações são organizadas para distribuição responsável e eficiente.
-          </p>
+          <p>Doações são organizadas para distribuição responsável e eficiente.</p>
         </div>
         <div className="info-item">
           <i className="fas fa-users icon"></i>
           <h3>Comunidade Mais Forte</h3>
-          <p>
-            Alimentar é também cuidar, fortalecer laços e transformar realidades.
-          </p>
+          <p>Alimentar é também cuidar, fortalecer laços e transformar realidades.</p>
         </div>
       </section>
 
@@ -141,38 +129,49 @@ const Foods: React.FC = () => {
 
         <form className="donation-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="nome">Nome Completo</label>
+            <label htmlFor="donationName">Nome Completo</label>
             <input
+              type="text"
               id="donationName"
               name="donationName"
+              value={nome}
+              onChange={e => setNome(e.target.value)}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">E-mail</label>
+            <label htmlFor="donationEmail">E-mail</label>
             <input
+              type="email"
               id="donationEmail"
               name="donationEmail"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="tipo">Tipo de Alimento</label>
+            <label htmlFor="donationType">Tipo de Alimento</label>
             <input
+              type="text"
               id="donationType"
               name="donationType"
               placeholder="Ex: Arroz, Feijão"
+              value={tipo}
+              onChange={e => setTipo(e.target.value)}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="quantidade">Quantidade (kg)</label>
+            <label htmlFor="donationQuantity">Quantidade (kg)</label>
             <input
               type="number"
               id="donationQuantity"
               name="donationQuantity"
               min="0.1"
               step="0.1"
+              value={quantidade}
+              onChange={e => setQuantidade(e.target.value)}
             />
           </div>
 

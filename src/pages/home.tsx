@@ -4,13 +4,14 @@ import { Footer } from '../layouts/shared/footer';
 import { useNavigate } from 'react-router-dom';
 import '../layouts/style/globalCSS.css';
 import '../layouts/style/homeCSS.css';
+import { useTheme } from '../contexts/ThemeContext'; 
 
 export default function Home() {
   const navigate = useNavigate();
-   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  const { theme } = useTheme(); // Obtenha o tema atual
 
-  // Função para adicionar refs ao array
-  const addToRefs = (el) => {
+  const addToRefs = (el: HTMLElement | null) => {
     if (el && !sectionRefs.current.includes(el)) {
       sectionRefs.current.push(el);
     }
@@ -23,18 +24,16 @@ export default function Home() {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
             entry.target.classList.add('animate-fadeIn');
-            // Opcional: deixar de observar após a animação
             observer.unobserve(entry.target);
           }
         });
       },
       {
         threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px' // Adia um pouco o trigger
+        rootMargin: '0px 0px -50px 0px'
       }
     );
 
-    // Observar todas as seções registradas
     sectionRefs.current.forEach((ref) => {
       if (ref) observer.observe(ref);
     });

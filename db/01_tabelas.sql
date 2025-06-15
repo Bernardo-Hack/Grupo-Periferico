@@ -20,7 +20,7 @@ CREATE TABLE Administrador (
 );
 
 -- Tabela de doações financeiras
-CREATE TABLE DoacaoDinheiro (
+CREATE TABLE doacaodinheiro (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT,
     nome_doador VARCHAR(255) NOT NULL,

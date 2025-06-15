@@ -5,6 +5,10 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 const Monetary: React.FC = () => {
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [valor, setValor] = useState<string>(''); // string para input, converteremos antes de enviar
+  const [metodoPagamento, setMetodoPagamento] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
@@ -12,49 +16,50 @@ const Monetary: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const donationName = (document.getElementById('donationName') as HTMLInputElement)?.value;
-    const donationEmail = (document.getElementById('donationEmail') as HTMLInputElement)?.value;
-    const donationValue = (document.getElementById('donationValue') as HTMLInputElement)?.value;
-    const donationPayment = (document.getElementById('donationPayment') as HTMLInputElement)?.value;
+    // Converter valor para número
+    const valorNum = parseFloat(valor);
+    console.log('Monetary - Valores enviados:', { nome, email, valor, valorNum, metodoPagamento });
 
-    if (!donationName || !donationEmail || !donationValue || !donationPayment) {
+    // Validações básicas
+    if (!nome || !email || !valor || !metodoPagamento) {
       return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
     }
-
-    if (!donationEmail || !validarEmail(donationEmail)) {
+    if (!validarEmail(email)) {
       return Swal.fire('Erro', 'Insira um e-mail válido.', 'error');
     }
-
-    if (!donationValue) {
-      return Swal.fire('Erro', 'Insira um valor.', 'error');
+    if (isNaN(valorNum)) {
+      return Swal.fire('Erro', 'Valor inválido.', 'error');
+    }
+    if (valorNum <= 0) {
+      return Swal.fire('Erro', 'Valor deve ser maior que zero.', 'error');
+    }
+    // opcional: verificar se metodoPagamento está entre as opções esperadas
+    const opcoes = ['pix', 'cartao', 'boleto'];
+    if (!opcoes.includes(metodoPagamento)) {
+      return Swal.fire('Erro', 'Método de pagamento inválido.', 'error');
     }
 
-    if (!donationPayment) {
-      return Swal.fire('Erro', 'Selecione um método de pagamento.', 'error');
-    }
-
+    setLoading(true);
     try {
       const res = await fetch('http://localhost:5000/api/doacoes/dinheiro', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          nome: donationName,
-          email: donationEmail,
-          valor: parseFloat(donationPayment),
-          metodo_pagamento: donationValue
+          nome,
+          email,
+          valor: valorNum,
+          metodo_pagamento: metodoPagamento,
         }),
-        credentials: 'include'
       });
-
       const json = await res.json();
+      console.log('Monetary - Resposta da API:', json);
 
       if (!res.ok) {
         throw new Error(json.message || 'Erro ao processar doação');
       }
-
-      // Se a resposta incluir uma URL de redirecionamento
       if (json.redirectUrl) {
         window.location.href = json.redirectUrl;
       } else {
@@ -70,15 +75,14 @@ const Monetary: React.FC = () => {
           }
         });
       }
-
     } catch (err) {
+      console.error('Monetary - Erro na doação (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err.message || 'Ocorreu um erro inesperado ao processar sua doação',
+        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
-      console.error('Erro na doação:', err);
     } finally {
       setLoading(false);
     }
@@ -94,6 +98,12 @@ const Monetary: React.FC = () => {
           <p>Sua contribuição faz a diferença!</p>
         </div>
       </header>
+      <section className="donation-banner">
+        <img
+          src="src\assets\images\photo-1740592910131-b604d790061a.avif"
+          alt="Doação de Alimentos"
+        />
+      </section>
 
       <section className="donation-form-section">
         <h2>Faça sua doação</h2>
@@ -101,14 +111,24 @@ const Monetary: React.FC = () => {
           <div className="form-group">
             <label htmlFor="donationName">Nome Completo</label>
             <input
+              type="text"
               id="donationName"
+              name="donationName"
               autoComplete="name"
+              value={nome}
+              onChange={e => setNome(e.target.value)}
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="donationEmail">E-mail</label>
-            <input id="donationEmail" autoComplete="email"
+            <input
+              type="email"
+              id="donationEmail"
+              name="donationEmail"
+              autoComplete="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
             />
           </div>
 
@@ -121,6 +141,8 @@ const Monetary: React.FC = () => {
               min="1"
               step="0.01"
               autoComplete="transaction-amount"
+              value={valor}
+              onChange={e => setValor(e.target.value)}
             />
           </div>
 
@@ -130,6 +152,8 @@ const Monetary: React.FC = () => {
               id="donationPayment"
               name="donationPayment"
               autoComplete="cc-type"
+              value={metodoPagamento}
+              onChange={e => setMetodoPagamento(e.target.value)}
             >
               <option value="">Selecione</option>
               <option value="pix">PIX</option>

@@ -3,9 +3,11 @@ import { Navbar } from '../../layouts/shared/navbar';
 import '../../layouts/style/donations_global.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Clothes: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const { theme } = useTheme(); // Obtenha o tema atual
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
@@ -64,7 +66,6 @@ const Clothes: React.FC = () => {
         throw new Error(json.message || 'Erro ao processar doação');
       }
 
-      // Se a resposta incluir uma URL de redirecionamento
       if (json.redirectUrl) {
         window.location.href = json.redirectUrl;
       } else {
@@ -85,7 +86,7 @@ const Clothes: React.FC = () => {
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err.message || 'Ocorreu um erro inesperado ao processar sua doação',
+        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
       console.error('Erro na doação:', err);
@@ -95,7 +96,7 @@ const Clothes: React.FC = () => {
   };
 
   return (
-    <div className="clothesfoods-page">
+    <div className="clothesfoods-page" data-theme={theme}>
       <Navbar />
 
       <header className="donation-header">

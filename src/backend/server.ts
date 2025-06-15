@@ -5,7 +5,6 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import cors from 'cors';
-import path from 'path'; // <-- 1. IMPORTADO O 'path'
 
 import userRoutes from './functions/userFunc';
 import { loadUser, loadDoacao } from './functions/adminFunc';
@@ -21,61 +20,95 @@ declare module 'express-session' {
 
 const app = express();
 
-// 1) Parsing do body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ------------------------------------------------------------
+// 1) Middleware de parsing do body
+app.use(express.json()); // Para JSON
+app.use(express.urlencoded({ extended: true })); // Para form-urlencoded, se necessário
 
+// 1.1) Middleware de logging (útil para debug de req.body)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Só loga métodos que costumam ter body (POST, PUT, PATCH), mas você pode logar sempre
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - body:`, req.body);
+  } else {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  }
+  next();
+});
+
+// ------------------------------------------------------------
 // 2) CORS + sessão
-// Removido o 'origin' fixo para funcionar em produção no Render
 app.use(cors({
-  credentials: true
+  origin: 'http://localhost:5173', // ajuste para a URL do frontend
+  credentials: true,
 }));
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'segredo_temporario',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    // Em produção (Render), você deve mudar 'secure' para true se usar HTTPS
-    secure: process.env.NODE_ENV === 'production', 
+    secure: false,       // em produção, se usar HTTPS, coloque true
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 24
-  }
+    maxAge: 1000 * 60 * 60 * 24, // 1 dia
+  },
 }));
 
-// 3) Rotas de API
-// SUAS ROTAS DE API DEVEM VIR ANTES DO CÓDIGO DO FRONTEND
-app.use('/test', testDB); 
+// ------------------------------------------------------------
+// 3) Rotas
+
+// Rotas de usuário (autenticação, perfil, etc.)
 app.use('/user', userRoutes);
+
+// Rotas de dashboard admin
 app.get('/adminUserDashboard', loadUser);
 app.get('/adminMonetaryDonationDashboard', loadDoacao);
-app.post('/api/doacoes/dinheiro', registerDonation);
-app.post('/api/doacoes/roupas', registerClothesDonation);
-app.post('/api/doacoes/alimentos', registerFoodDonation);
+
+// Helper para capturar erros em async handlers
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
+// Rotas de doações
+app.post('/api/doacoes/dinheiro', asyncHandler(registerDonation));
+app.post('/api/doacoes/roupas', asyncHandler(registerClothesDonation));
+app.post('/api/doacoes/alimentos', asyncHandler(registerFoodDonation));
+
+// Rota de testes de BD ou outras
 app.use('/test', testDB);
 
-// <-- 4. CÓDIGO NOVO PARA SERVIR O FRONTEND -->
-// Aponte para a pasta de build do seu frontend (React)
-const frontendPath = path.join(__dirname, '..', '..', 'frontend', 'dist'); // AJUSTE 'frontend' SE O NOME DA SUA PASTA FOR OUTRO
-app.use(express.static('../../dist'));
-
-// Para qualquer outra rota não encontrada, sirva o index.html do frontend
-// Isso permite que o React Router controle a navegação
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+// Se quiser, adicione uma rota raiz para verificar que o servidor está vivo:
+app.get('/', (req: Request, res: Response) => {
+  res.json({ status: 'Servidor rodando' });
 });
-// <-- FIM DO CÓDIGO NOVO -->
 
+// ------------------------------------------------------------
+// 4) Tratamento de rotas não encontradas (404)
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ error: 'Rota não encontrada' });
+});
+
+// ------------------------------------------------------------
 // 5) Error handler em JSON
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('💥 Erro não capturado:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
+  // Se headers já foram enviados, delega
+  if (res.headersSent) {
+    return next(err);
+  }
+  const statusCode = err.status || 500;
+  res.status(statusCode).json({
+    success: false,
+    error: err.message || 'Internal server error',
   });
 });
 
+// ------------------------------------------------------------
 // 6) Start
 const PORT = Number(process.env.PORT) || 5000;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🔥 Servidor rodando em http://localhost:${PORT}`);
 });
