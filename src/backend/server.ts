@@ -60,12 +60,6 @@ const frontendDistPath = path.join(__dirname, '..');
 // Middleware para servir os arquivos estáticos (HTML, CSS, JS) do React
 app.use(express.static(frontendDistPath));
 
-// Rota "catch-all" que redireciona qualquer outra requisição para o index.html do React.
-// Isso permite que o React Router controle a navegação e as rotas da aplicação.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendDistPath, 'index.html'));
-});
-
 
 // 5) Error Handler
 // Middleware para capturar erros de forma centralizada.
