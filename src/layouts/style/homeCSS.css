@@ -2,14 +2,14 @@
 .home-hero {
   width: 100%;
   height: 100vh;
-  background-color: #ffffff;
+  background-color: var(--background-color);
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
-  color: #fff;
-  border-bottom: 2px solid #000;
-  overflow: hidden; /* Evita vazamento de animações */
+  color: var(--text-color);
+  border-bottom: 2px solid var(--border-color);
+  overflow: hidden;
   position: relative;
 }
 
@@ -55,48 +55,35 @@
   max-width: 250px;
   width: 100%;
   height: auto;
-  transition: transform 0.5s ease, opacity 0.5s ease;
+  transition: transform 0.5s ease;
 }
 
 .hero-image:hover {
   transform: scale(1.05) rotate(2deg);
 }
 
-.styled-hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
 .hero-overlay {
   padding: 3rem;
   text-align: center;
-  color: rgb(0, 0, 0);
+  color: var(--text-color);
   max-width: 90%;
-  border-radius: 8px;
 }
 
 .hero-overlay p {
   font-size: 1.30rem;
-  transition: all 0.3s ease;
 }
 
-/* Seções de conteúdo */
+/* Seções de conteúdo - COR ÚNICA */
 .home-section {
   padding: 4rem 0;
   display: flex;
   align-items: center;
-  background: #fff;
-  border-bottom: 2px solid #000;
+  background-color: var(--background-color);
+  border-bottom: 2px solid var(--border-color);
   width: 100%;
-  transition: all 0.5s ease;
 }
 
-.home-section:hover {
-  background: rgba(255, 255, 255, 0.98);
-}
-
+/* Container de conteúdo */
 .section-content,
 .styled-section {
   display: grid;
@@ -107,7 +94,7 @@
   box-sizing: border-box;
   opacity: 0;
   transform: translateY(20px);
-  transition: all 0.8s ease;
+  background-color: transparent !important; /* Garante que não tenha fundo próprio */
 }
 
 .section-content.visible,
@@ -125,45 +112,32 @@
   width: 100%;
   object-fit: cover;
   border-radius: 4px;
-  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  transition: transform 0.5s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: transparent !important;
 }
 
 .section-image:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
 .text-block {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background-color: transparent !important;
 }
 
 .text-block h2 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: #222;
-  text-shadow: 2px 2px 4px #222;
-  transition: all 0.3s ease;
-}
-
-.text-block h2:hover {
-  transform: translateX(5px);
+  color: var(--text-color);
 }
 
 .text-block p {
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
-  color: #444;
-  transition: all 0.3s ease;
-}
-
-.additional-info {
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-  color: #555;
-  transition: all 0.3s ease;
+  color: var(--text-color);
 }
 
 .section-cta {
@@ -174,57 +148,32 @@
   padding: 1rem 2.5rem;
   cursor: pointer;
   font-size: 1.1rem;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.3s;
   align-self: start;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-cta::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: all 0.5s ease;
 }
 
 .section-cta:hover {
   background: #cc0000;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.section-cta:hover::before {
-  left: 100%;
-}
-
-/* Rodapé */
+/* Rodapé - COR ÚNICA */
 .footer {
-  background: #fff;
-  color: black;
+  background-color: var(--background-color);
+  color: var(--text-color);
   padding: 2rem 0;
   width: 100%;
-  border-top: 2px solid #000;
-  transition: all 0.5s ease;
-}
-
-.footer:hover {
-  background: rgba(255, 255, 255, 0.98);
+  border-top: 2px solid var(--border-color);
 }
 
 .footer h2 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  transition: all 0.3s ease;
 }
 
 .footer p {
   font-size: 1rem;
   margin-bottom: 0.5rem;
-  transition: all 0.3s ease;
 }
 
 .footer .footer-content {
@@ -233,63 +182,30 @@
   flex-wrap: wrap;
   padding: 0 2rem;
   box-sizing: border-box;
-}
-
-/* Efeito de onda sutil nos elementos interativos */
-.wave-effect {
-  position: relative;
-  overflow: hidden;
-}
-
-.wave-effect:after {
-  content: '';
-  display: block;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
-  background-repeat: no-repeat;
-  background-position: 50%;
-  transform: scale(10, 10);
-  opacity: 0;
-  transition: transform .5s, opacity 1s;
-}
-
-.wave-effect:active:after {
-  transform: scale(0, 0);
-  opacity: .3;
-  transition: 0s;
+  background-color: transparent !important;
 }
 
 /* Responsividade */
 @media (max-width: 1024px) {
   .hero-overlay h1 {
     font-size: 2.5rem;
-    transition: all 0.3s ease;
   }
 
   .hero-overlay p {
     font-size: 1.25rem;
-    transition: all 0.3s ease;
   }
 
   .text-block h2 {
     font-size: 2rem;
-    transition: all 0.3s ease;
   }
 
   .text-block p {
     font-size: 1.125rem;
-    transition: all 0.3s ease;
   }
 
   .section-cta {
     font-size: 1rem;
     padding: 0.75rem 2rem;
-    transition: all 0.3s ease;
   }
 }
 
@@ -298,7 +214,6 @@
   .section-content {
     grid-template-columns: 1fr;
     text-align: center;
-    transition: all 0.5s ease;
   }
 
   .section-content.reversed,
@@ -309,82 +224,48 @@
   .section-cta {
     align-self: center;
     margin: 0 auto;
-    transition: all 0.3s ease;
   }
 
   .hero-overlay {
     padding: 2rem;
-    transition: all 0.3s ease;
   }
 
   .footer .footer-content {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    transition: all 0.5s ease;
   }
-}
-
-body, .text-block, p {
-  direction: ltr;
-  unicode-bidi: bidi-override;
-  text-align: left;
 }
 
 @media (max-width: 480px) {
   .hero-overlay h1 {
     font-size: 2rem;
-    transition: all 0.3s ease;
   }
 
   .hero-overlay p {
     font-size: 1rem;
-    transition: all 0.3s ease;
   }
 
   .text-block h2 {
     font-size: 1.5rem;
-    transition: all 0.3s ease;
   }
 
-  .text-block p,
-  .additional-info {
+  .text-block p {
     font-size: 1rem;
-    transition: all 0.3s ease;
   }
 
   .section-cta {
     padding: 0.75rem 1.5rem;
     font-size: 0.95rem;
-    transition: all 0.3s ease;
   }
 }
 
-/* Scroll Reveal Animation */
+/* Apenas animação de fadeIn */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slideInLeft {
-  from { transform: translateX(-50px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideInRight {
-  from { transform: translateX(50px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* Adicione esta classe via JavaScript quando o elemento estiver visível */
 .animate-fadeIn {
   animation: fadeIn 0.8s ease forwards;
-}
-
-.animate-slideInLeft {
-  animation: slideInLeft 0.8s ease forwards;
-}
-
-.animate-slideInRight {
-  animation: slideInRight 0.8s ease forwards;
 }

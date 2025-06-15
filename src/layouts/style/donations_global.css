@@ -1,19 +1,45 @@
-/* donations.global.css */
-/* ===== ESTILOS GLOBAIS PARA TODAS AS PÁGINAS DE DOAÇÃO ===== */
-
+/* donations_global.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* Variáveis de tema para doações */
+:root {
+  --donation-bg: #ffffff;
+  --donation-text: #333;
+  --donation-header-bg: linear-gradient(45deg, rgba(255,0,0,0.85), rgba(200,0,0,0.85));
+  --donation-info-bg: #f8f9fa;
+  --donation-form-section-bg: #ffffff;
+  --donation-form-label: #555;
+  --donation-form-border: #ccc;
+  --info-item-bg: goldenrod;
+  --info-item-text: #000;
+}
+
+[data-theme="dark"] {
+  --donation-bg: #1a1a1a;
+  --donation-text: #e0e0e0;
+  --donation-header-bg: linear-gradient(45deg, rgba(150,0,0,0.85), rgba(100,0,0,0.85));
+  --donation-info-bg: #222222;
+  --donation-form-section-bg: #1e1e1e;
+  --donation-form-label: #bbb;
+  --donation-form-border: #444;
+  --info-item-bg: #444;
+  --info-item-text: #e0e0e0;
+}
 
 body {
   margin: 0;
   padding: 0;
   font-family: 'Poppins', sans-serif;
+  background-color: var(--donation-bg);
+  color: var(--donation-text);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* Container principal para todas as páginas */
 .monetary-page,
 .clothesfoods-page {
-  background: #ffffff;
-  color: #333;
+  background: var(--donation-bg);
+  color: var(--donation-text);
   width: 100%;
   overflow-x: hidden;
 }
@@ -22,7 +48,7 @@ body {
 .donation-header {
   text-align: center;
   padding: 4rem 2rem;
-  background: linear-gradient(45deg, rgba(255,0,0,0.85), rgba(200,0,0,0.85));
+  background: var(--donation-header-bg);
   color: white;
   width: 100%;
 }
@@ -63,21 +89,22 @@ body {
   text-align: center;
   padding: 2rem;
   gap: 2rem;
-  background: #ffffff;
+  background: var(--donation-info-bg);
   margin-top: 2rem;
 }
 
 .info-item {
   flex: 1 1 300px;
-  background: goldenrod;
+  background: var(--info-item-bg);
   border-radius: 10px;
   padding: 1.5rem;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  color: var(--info-item-text);
 }
 
 .info-item .icon {
   font-size: 2.5rem;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--info-item-text);
   margin-bottom: 1rem;
 }
 
@@ -93,7 +120,7 @@ body {
 
 /* Seções de formulário */
 .donation-form-section {
-  background: #ffffff;
+  background: var(--donation-form-section-bg);
   padding: 3rem 2rem;
   width: 100%;
   margin-top: 2rem;
@@ -111,7 +138,7 @@ body {
   max-width: 800px;
   margin: 0 auto 2rem;
   font-size: 1.1rem;
-  color: #555;
+  color: var(--donation-form-label);
 }
 
 .donation-form {
@@ -122,20 +149,34 @@ body {
   margin: 0 auto;
 }
 
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
 .donation-form label {
+  display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: var(--donation-text);
 }
 
 .donation-form input,
 .donation-form textarea,
 .donation-form select {
-  margin-bottom: 1.5rem;
+  width: 100%;
   padding: 0.8rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--donation-form-border);
   border-radius: 8px;
   font-size: 1rem;
-  width: 100%;
+  background-color: var(--donation-form-section-bg);
+  color: var(--donation-text);
+}
+
+.donation-form input:focus,
+.donation-form select:focus {
+  outline: none;
+  border-color: rgba(255,0,0,0.5);
+  box-shadow: 0 0 0 2px rgba(255,0,0,0.2);
 }
 
 .submit-donation {
@@ -154,10 +195,6 @@ body {
 
 .submit-donation:hover {
   background-color: rgba(200,0,0,0.85);
-}
-
-.alt-bg {
-  background: #f8f9fa;
 }
 
 /* Responsividade */

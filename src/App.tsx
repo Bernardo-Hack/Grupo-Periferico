@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect, FC, ReactNode, useRef } from 'react';
+import { ThemeProvider } from '../src/contexts/ThemeContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
@@ -12,6 +13,7 @@ import UserRegister from './pages/user/user_register';
 import Immigrant from './pages/user/immigrant';
 import Voluntary from './pages/user/voluntary';
 import Profile from './pages/user/profile';
+
 
 // Tipos globais para widget do Google Translate
 declare global {
@@ -90,25 +92,23 @@ const MainLayout: FC<{ children: ReactNode }> = ({ children }) => (
 export default function App() {
   return (
     <BrowserRouter>
-      <MainLayout>
-       <Routes>
-        {/* Rota raiz - equivalente a path="/" */}
-        <Route index element={<Home />} />
-        
-        {/* Demais rotas com paths absolutos */}
-        <Route path="/perfil" element={<Profile />} />
-        <Route path="/registro" element={<UserRegister />} />
-        <Route path="/doacao-monetaria" element={<Monetary />} />
-        <Route path="/doacao-roupas" element={<Clothes />} />
-        <Route path="/doacao-alimentos" element={<Foods />} />
-        <Route path="/imigrantes" element={<Immigrant />} />
-        <Route path="/voluntarios" element={<Voluntary />} />
-        <Route path="/admin" element={<Adm />} />
-        
-        {/* Rota curinga para 404 */}
-        <Route path="*" element={<Home />} />
-      </Routes>
-      </MainLayout>
+      {/* Adicione o ThemeProvider aqui envolvendo todo o conteúdo */}
+      <ThemeProvider>
+        <MainLayout>
+          <Routes>
+            <Route index element={<Home />} />
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/registro" element={<UserRegister />} />
+            <Route path="/doacao-monetaria" element={<Monetary />} />
+            <Route path="/doacao-roupas" element={<Clothes />} />
+            <Route path="/doacao-alimentos" element={<Foods />} />
+            <Route path="/imigrantes" element={<Immigrant />} />
+            <Route path="/voluntarios" element={<Voluntary />} />
+            <Route path="/admin" element={<Adm />} />
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </MainLayout>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

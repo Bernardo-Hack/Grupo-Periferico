@@ -1,14 +1,15 @@
+/* src/layouts/style/profileCSS.css */
 .profile-page {
   font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
+  background-color: var(--background-color);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 .profile-header {
-  background-color: #fff;
-  padding-top: 100px; /* margem para compensar a navbar fixa */
+  background-color: var(--header-bg);
+  padding-top: 100px;
   padding-bottom: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -28,11 +29,12 @@
 .user-details h1 {
   margin: 0;
   font-size: 28px;
+  color: var(--text-color);
 }
 
 .user-details p {
   margin: 4px 0;
-  color: #555;
+  color: var(--text-color);
 }
 
 .profile-content {
@@ -44,6 +46,7 @@
 
 .donations-section h2 {
   margin-bottom: 15px;
+  color: var(--text-color);
 }
 
 .donations-section ul {
@@ -52,16 +55,96 @@
 }
 
 .donations-section li {
-  background-color: #fff;
+  background-color: var(--card-bg);
   padding: 12px;
   margin-bottom: 10px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: var(--text-color);
 }
 
 .profile-footer {
-  background-color: #222;
-  color: #fff;
+  background-color: var(--footer-bg);
+  color: var(--text-color);
   text-align: center;
   padding: 16px;
+}
+
+/* Seletor de tema */
+.theme-selector {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.toggle-switch {
+  width: 50px;
+  height: 24px;
+  background-color: #ccc;
+  border-radius: 12px;
+  position: relative;
+  margin-right: 8px;
+  transition: background-color 0.3s;
+}
+
+.toggle-switch.active {
+  background-color: #4CAF50;
+}
+
+.switch-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+.toggle-switch.active .switch-handle {
+  transform: translateX(26px);
+}
+
+/* Botão de exclusão de conta */
+.delete-account-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.delete-account-btn {
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 0.5rem;
+}
+
+.delete-account-btn:hover {
+  background-color: #cc0000;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .delete-account-btn {
+    max-width: 100%;
+  }
 }

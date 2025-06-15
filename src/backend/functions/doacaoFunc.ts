@@ -1,129 +1,226 @@
-import { RequestHandler } from 'express';
+// src/backend/functions/doacaoFunc.ts
+import { Request, Response, NextFunction } from 'express';
 import db from '../config/db';
 
-export const registerDonation: RequestHandler = async (req, res, next) => {
-  try {
-    const { valor, metodo_pagamento } = req.body;
-    const userId = req.session.userId;
+/**
+ * Converte de forma segura um valor que pode vir como string ou number em número ou retorna null se inválido.
+ */
+function parseNumber(value: any): number | null {
+  if (typeof value === 'number') {
+    return isNaN(value) ? null : value;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+    const num = Number(trimmed);
+    return isNaN(num) ? null : num;
+  }
+  return null;
+}
 
-    if (!valor || !metodo_pagamento) {
-      // 'return' foi removido desta linha
-      res.status(400).json({ 
+/**
+ * 1) Doação em dinheiro
+ * Tabela: doacaodinheiro
+ * Colunas: id, usuario_id, nome_doador, valor, data_doacao (default NOW), metodo_pagamento
+ */
+export const registerDonation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log('registerDonation - req.body:', req.body);
+    const userId = req.session?.userId;
+    // Exigir login: se não tiver userId, retorna 401
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        message: 'Preencha todos os campos.' 
+        message: 'Usuário não autenticado. Faça login antes de doar.',
       });
-      return; // Adicionado um return vazio para parar a execução
     }
 
+    // Esperamos receber do frontend:
+    //   valor: number|string (valor da doação)
+    //   metodo_pagamento: 'pix' | 'cartao' | 'boleto'
+    const valorRaw = req.body.valor;
+    const metodo_pagamento = req.body.metodo_pagamento as string;
+    const valor = parseNumber(valorRaw);
+
+    // Validações:
+    if (valor === null || !metodo_pagamento) {
+      return res.status(400).json({
+        success: false,
+        message: 'Preencha todos os campos corretamente. Valor deve ser número maior que zero.',
+      });
+    }
+    if (valor <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valor deve ser maior que zero.',
+      });
+    }
+    const opcoes = ['pix', 'cartao', 'boleto'];
+    if (!opcoes.includes(metodo_pagamento)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Método de pagamento inválido.',
+      });
+    }
+
+    // Monta e executa o INSERT
     const insertSQL = `
-      INSERT INTO DoacaoDinheiro (usuario_id, valor, metodo_pagamento, data_doacao)
-      VALUES ($1, $2, $3, NOW())
-      RETURNING id
+      INSERT INTO doacaodinheiro (usuario_id, valor, metodo_pagamento)
+      VALUES (?, ?, ?)
     `;
+    console.log(
+      'Executando INSERT em doacaodinheiro:',
+      insertSQL,
+      'valores:',
+      [userId, valor, metodo_pagamento]
+    );
+    await db.query(insertSQL, [userId, valor, metodo_pagamento]);
 
-    await db.query(insertSQL, [
-      userId || null, 
-      valor, 
-      metodo_pagamento
-    ]);
-
-    // 'return' foi removido desta linha
-    res.status(201).json({ 
+    return res.status(201).json({
       success: true,
       message: 'Doação registrada com sucesso',
-      redirectUrl: '/doacao/sucesso'
+      redirectUrl: '/doacao/sucesso',
     });
   } catch (err) {
-    console.error('Erro ao registrar doação:', err);
-    // 'return' foi removido desta linha
-    res.status(500).json({ 
+    console.error('Erro ao registrar doação em dinheiro:', err);
+    return res.status(500).json({
       success: false,
-      message: 'Erro ao registrar doação.' 
+      message: (err instanceof Error ? err.message : 'Erro ao registrar doação.'),
     });
   }
 };
 
-export const registerClothesDonation: RequestHandler = async (req, res, next) => {
+/**
+ * 2) Doação de roupas
+ * Tabela: DoacaoRoupa
+ * Colunas: id, usuario_id, tipo, quantidade, tamanho, data_doacao
+ * Não há nome_doador/email; assumimos que o usuário identificado pela sessão é quem doa.
+ */
+export const registerClothesDonation = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { tipo, quantidade, tamanho } = req.body;
-    const userId = req.session.userId;
-
-    if (!tipo || !quantidade) {
-      // 'return' foi removido desta linha
-      res.status(400).json({ 
+    console.log('registerClothesDonation - req.body:', req.body);
+    const userId = req.session?.userId;
+    // Exigir login:
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        message: 'Preencha todos os campos obrigatórios.' 
+        message: 'Usuário não autenticado. Faça login antes de doar roupas.',
       });
-      return; // Adicionado um return vazio para parar a execução
     }
+
+    // Esperamos receber do frontend:
+    //   tipo: string (descrição/tipo da roupa)
+    //   quantidade: number|string (quantidade de peças)
+    //   tamanho: string|null (opcional, ex: 'P','M','G','GG')
+    const { tipo, tamanho } = req.body;
+    const quantidadeRaw = req.body.quantidade;
+    const quantidade = parseNumber(quantidadeRaw);
+
+    // Validações:
+    if (!tipo || quantidade === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'Preencha tipo e quantidade corretamente. Quantidade inválida.',
+      });
+    }
+    if (quantidade <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Quantidade deve ser um número positivo.',
+      });
+    }
+    // Se quiser validar tamanho (opcional), por exemplo permitir só certas opções:
+    // const tamanhosValidos = ['P','M','G','GG'];
+    // if (tamanho && !tamanhosValidos.includes(tamanho)) { ... }
 
     const insertSQL = `
       INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao)
-      VALUES ($1, $2, $3, $4, NOW())
-      RETURNING id
+      VALUES (?, ?, ?, ?, NOW())
     `;
+    console.log(
+      'Executando INSERT em DoacaoRoupa:',
+      insertSQL,
+      'valores:',
+      [userId, tipo, quantidade, tamanho || null]
+    );
+    await db.query(insertSQL, [userId, tipo, quantidade, tamanho || null]);
 
-    await db.query(insertSQL, [
-      userId || null,
-      tipo,
-      quantidade,
-      tamanho || null
-    ]);
-
-    // 'return' foi removido desta linha
-    res.status(201).json({ 
+    return res.status(201).json({
       success: true,
       message: 'Doação de roupas registrada com sucesso',
-      redirectUrl: '/doacao/sucesso'
+      redirectUrl: '/doacao/sucesso',
     });
   } catch (err) {
-    console.error('Erro detalhado:', err);
-    // 'return' foi removido desta linha
-    res.status(500).json({ 
+    console.error('Erro ao registrar doação de roupas:', err);
+    return res.status(500).json({
       success: false,
-      message: (err instanceof Error ? err.message : 'Erro ao registrar doação de roupas.') 
+      message: (err instanceof Error ? err.message : 'Erro ao registrar doação de roupas.'),
     });
   }
 };
 
-export const registerFoodDonation: RequestHandler = async (req, res, next) => {
+/**
+ * 3) Doação de alimentos
+ * Tabela: DoacaoAlimento
+ * Colunas: id, usuario_id, tipo, quantidade_kg, data_doacao
+ * Não há nome_doador/email; assumimos que a sessão identifica o doador.
+ */
+export const registerFoodDonation = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { tipo, quantidade } = req.body;
-    const userId = req.session.userId;
-
-    if (!tipo || !quantidade) {
-      // 'return' foi removido desta linha
-      res.status(400).json({ 
+    console.log('registerFoodDonation - req.body:', req.body);
+    const userId = req.session?.userId;
+    // Exigir login:
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        message: 'Preencha todos os campos obrigatórios.' 
+        message: 'Usuário não autenticado. Faça login antes de doar alimentos.',
       });
-      return; // Adicionado um return vazio para parar a execução
+    }
+
+    // Esperamos receber do frontend:
+    //   tipo: string (descrição do alimento, ex: 'Arroz')
+    //   quantidade: number|string (quantidade em kg)
+    const { tipo } = req.body;
+    const quantidadeRaw = req.body.quantidade;
+    const quantidade = parseNumber(quantidadeRaw);
+
+    // Validações:
+    if (!tipo || quantidade === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'Preencha tipo e quantidade corretamente. Quantidade inválida.',
+      });
+    }
+    if (quantidade <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Quantidade deve ser um número positivo.',
+      });
     }
 
     const insertSQL = `
-      INSERT INTO DoacaoAlimento (usuario_id, tipo, quantidade, data_doacao)
-      VALUES ($1, $2, $3, NOW())
-      RETURNING id
+      INSERT INTO DoacaoAlimento (usuario_id, tipo, quantidade_kg, data_doacao)
+      VALUES (?, ?, ?, NOW())
     `;
+    console.log(
+      'Executando INSERT em DoacaoAlimento:',
+      insertSQL,
+      'valores:',
+      [userId, tipo, quantidade]
+    );
+    const [result] = await db.query(insertSQL, [userId, tipo, quantidade]);
+    console.log('Doação de alimento registrada com sucesso:', result);
 
-    await db.query(insertSQL, [
-      userId || null,
-      tipo,
-      quantidade
-    ]);
-
-    // 'return' foi removido desta linha
-    res.status(201).json({ 
+    return res.status(201).json({
       success: true,
       message: 'Doação de alimentos registrada com sucesso',
-      redirectUrl: '/doacao/sucesso'
+      redirectUrl: '/doacao/sucesso',
     });
   } catch (err) {
     console.error('Erro ao registrar doação de alimentos:', err);
-    // 'return' foi removido desta linha
-    res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: (err instanceof Error ? err.message : 'Erro ao registrar doação de alimentos.') 
+      message: (err instanceof Error ? err.message : 'Erro ao registrar doação de alimentos.'),
     });
   }
 };
