@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import db from '../config/db'; // Deve ser um pool ou conexão do mysql2/promise
+import pool from '../config/db'; // Deve ser um pool ou conexão do mysql2/promise
 import { comparePassword } from '../utils/encrypt';
 
 const router = Router();
@@ -22,7 +22,7 @@ export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
 router.get('/admin/:username/:password', asyncHandler(async (req: Request, res: Response) => {
   const { username, password } = req.params;
 
-  const [rows]: any = await db.query(
+  const [rows]: any = await pool.query(
     'SELECT id, senha_hash FROM Administrador WHERE nome = ?',
     [username]
   );
@@ -41,7 +41,7 @@ router.get('/admin/logout', (req: Request, res: Response) => {
 
 export const loadUser = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [rows]: any = await db.query(
+    const [rows]: any = await pool.query(
       'SELECT * FROM Usuario ORDER BY nome'
     );
 
@@ -58,7 +58,7 @@ export const loadUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [rows]: any = await db.query(`
+    const [rows]: any = await pool.query(`
       SELECT d.id, u.nome, d.valor, d.metodo_pagamento, d.data_doacao
       FROM DoacaoDinheiro d
       JOIN Usuario u ON d.usuario_id = u.id

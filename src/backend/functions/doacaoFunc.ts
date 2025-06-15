@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import db from '../config/db';
+import pool from '../config/db';
 
 export const registerDonation: RequestHandler = async (req, res, next) => {
   try {
@@ -21,7 +21,7 @@ export const registerDonation: RequestHandler = async (req, res, next) => {
       RETURNING id
     `;
 
-    await db.query(insertSQL, [
+    await pool.query(insertSQL, [
       userId || null, 
       valor, 
       metodo_pagamento
@@ -63,7 +63,7 @@ export const registerClothesDonation: RequestHandler = async (req, res, next) =>
       RETURNING id
     `;
 
-    await db.query(insertSQL, [
+    await pool.query(insertSQL, [
       userId || null,
       tipo,
       quantidade,
@@ -106,7 +106,7 @@ export const registerFoodDonation: RequestHandler = async (req, res, next) => {
       RETURNING id
     `;
 
-    await db.query(insertSQL, [
+    await pool.query(insertSQL, [
       userId || null,
       tipo,
       quantidade

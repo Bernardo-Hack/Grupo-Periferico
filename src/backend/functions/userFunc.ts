@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import db from '../config/db';
+import pool from '../config/db';
 import { hashPassword, comparePassword } from '../utils/encrypt';
 
 const router = Router();
@@ -20,7 +20,7 @@ router.post(
     
     const hashed = await hashPassword(senha);
     
-    await db.query(
+    await pool.query(
       `INSERT INTO Usuario
          (nome, cpf, telefone, senha_hash, data_nascimento, data_cadastro)
        VALUES (?, ?, ?, ?, ?, NOW())`,
@@ -41,7 +41,7 @@ router.post(
       return res.status(400).json({ error: 'Preencha nome e senha.' });
     }
 
-    const [rows]: any = await db.query(
+    const [rows]: any = await pool.query(
       'SELECT id, nome, senha_hash FROM Usuario WHERE nome = ?',
       [nome]
     );
@@ -75,7 +75,7 @@ router.put(
 
     const { nome, telefone, data_nascimento } = req.body;
 
-    await db.query(
+    await pool.query(
       'UPDATE Usuario SET nome = ?, telefone = ?, data_nascimento = ? WHERE id = ?',
       [nome, telefone, data_nascimento, req.session.userId]
     );
@@ -93,7 +93,7 @@ router.get(
       return res.status(401).json({ error: 'Não autenticado.' });
     }
 
-    const [userRows]: any = await db.query(
+    const [userRows]: any = await pool.query(
       `SELECT nome, telefone, DATE_FORMAT(data_cadastro, '%Y-%m-%d') AS data_cadastro
        FROM Usuario
        WHERE id = ?`,
@@ -105,7 +105,7 @@ router.get(
       return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
 
-    const [donRows]: any = await db.query(
+    const [donRows]: any = await pool.query(
       `SELECT id, valor, metodo_pagamento AS metodo,
         DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
        FROM DoacaoDinheiro
