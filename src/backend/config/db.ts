@@ -1,47 +1,19 @@
-// src/backend/config/db.ts
+const { Client } = require('pg');
+require('dotenv').config();  
 
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
+const db = new Client({
+    connectionString: process.env.DB_URL,  
+    ssl: {
+        rejectUnauthorized: false,  
+    },
+});
 
-dotenv.config();
+db.connect((err) => {
+    if (err) {
+        console.error('Erro ao conectar ao PostgreSQL:', err);
+        return;
+    }
+    console.log("Conectado ao PostgreSQL.");
+});
 
-const requiredEnvVars = ['PGHOST', 'PGUSER', 'DB_PASSWORD', 'DB_NAME'];
-
-for (const varName of requiredEnvVars) {
-  if (!process.env[varName]) {
-    console.error(`❌ Variável de ambiente ${varName} não está definida.`);
-    process.exit(1); // Encerra o processo se faltar alguma variável
-  }
-}
-
-let pool: Pool;
-
-try {
-  pool = new Pool({
-    host: process.env.PGHOST,
-    user: process.env.PGUSER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: Number(process.env.DB_PORT) || 5432, // Porta padrão do PostgreSQL
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  });
-
-  // Testa a conexão inicial com o banco de dados (opcional, mas útil)
-  pool.query('SELECT NOW()')
-    .then(res => {
-      console.log('✅ Pool do PostgreSQL conectado com sucesso! Horário do banco:', res.rows[0].now);
-    })
-    .catch(err => {
-      console.error('❌ Erro ao conectar ao PostgreSQL:', err.message);
-      // Em um ambiente de produção, você pode querer encerrar o processo se a conexão falhar
-      // process.exit(1);
-    });
-
-} catch (err: any) {
-  console.error('❌ Erro inesperado ao criar o pool do PostgreSQL:', err.message);
-  process.exit(1);
-}
-
-export default pool;
+module.exports = db;
