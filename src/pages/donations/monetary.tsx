@@ -12,6 +12,7 @@ const Monetary: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
+  const apiUrl = process.env.VITE_API_URL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +42,7 @@ const Monetary: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/doacoes/dinheiro', {
+      const res = await fetch(`${apiUrl}/api/doacoes/dinheiro`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

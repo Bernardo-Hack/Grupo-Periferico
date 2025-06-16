@@ -38,8 +38,26 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // ------------------------------------------------------------
 // 2) CORS + sessão
+// Lista de origens permitidas
+const allowedOrigins = [
+  'http://localhost:5173',         // Para o seu frontend rodando localmente
+  process.env.CORS_ORIGIN,         // Para o seu frontend no Render (definido na variável de ambiente)
+  // Adicione outras URLs se precisar, por exemplo, a de um preview do Render
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // ajuste para a URL do frontend
+  origin: function (origin, callback) {
+    // Permite requisições sem 'origin' (como de apps mobile ou ferramentas como curl/Postman)
+    if (!origin) return callback(null, true);
+
+    // Se a origem da requisição estiver na nossa lista, permita
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      // Se não, rejeite
+      callback(new Error('A política de CORS para este site não permite acesso da sua origem.'));
+    }
+  },
   credentials: true,
 }));
 

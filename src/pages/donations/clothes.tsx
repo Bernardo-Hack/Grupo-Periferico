@@ -10,6 +10,7 @@ const Clothes: React.FC = () => {
   const { theme } = useTheme(); // Obtenha o tema atual
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
+  const apiUrl = process.env.VITE_API_URL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +46,7 @@ const Clothes: React.FC = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/doacoes/roupas', {
+      const res = await fetch(`${apiUrl}/api/doacoes/roupas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

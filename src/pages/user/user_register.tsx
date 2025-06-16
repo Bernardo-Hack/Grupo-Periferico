@@ -17,6 +17,7 @@ const Login: React.FC = () => {
 
   const validarCPF = (cpf: string) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/.test(cpf);
   const validarTelefone = (telefone: string) => /^\(?\d{2}\)?[\s-]?\d{4,5}-?\d{4}$/.test(telefone);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ const Login: React.FC = () => {
       return Swal.fire('Erro', 'Preencha nome e senha.', 'error');
     }
 
-    const res = await fetch('http://localhost:5000/user/login', {
+    const res = await fetch(`${apiUrl}/user/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -70,7 +71,7 @@ const Login: React.FC = () => {
       return Swal.fire('Erro', 'Telefone inválido.', 'error');
     }
 
-    const res = await fetch('http://localhost:5000/user/reg_user', {
+    const res = await fetch(`${apiUrl}/user/reg_user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -15,10 +15,12 @@ const Foods: React.FC = () => {
   const { theme } = useTheme(); // Obtenha o tema atual
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
+  const apiUrl = process.env.VITE_API_URL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const quantidadeNum = parseFloat(quantidade);
+    
     console.log('Valores enviados:', { nome, email, tipo, quantidade, quantidadeNum });
 
     if (!nome || !email || !tipo || !quantidade) {
@@ -36,7 +38,7 @@ const Foods: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/doacoes/alimentos', {
+      const res = await fetch(`${apiUrl}/api/doacoes/alimentos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
