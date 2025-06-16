@@ -5,7 +5,6 @@
 -- Índices para a tabela Usuario
 CREATE INDEX idx_usuario_cpf ON Usuario(cpf); -- Busca rápida por CPF
 CREATE INDEX idx_usuario_nascimento ON Usuario(data_nascimento); -- Relatórios por idade
-CREATE INDEX idx_usuario_composto ON Usuario(tipo, data_cadastro); -- Consultas combinadas
 
 -- Índices para a tabela DoacaoDinheiro
 CREATE INDEX idx_doacao_data ON DoacaoDinheiro(data_doacao); -- Filtros por data
