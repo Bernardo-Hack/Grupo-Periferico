@@ -3,6 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import pool from '../config/db';                 // seu pool mysql2/promise
 import { hashPassword, comparePassword } from '../utils/encrypt';
 import { RowDataPacket } from 'mysql2';
+import Swal from 'sweetalert2';
 
 const router = Router();
 
@@ -96,6 +97,35 @@ router.put(
     return res.status(200).json({ ok: true });
   })
 );
+
+const handleLogout = async () => {
+  try {
+    const res = await fetch('http://localhost:5000/user/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
+
+    if (!res.ok) {
+      throw new Error('Erro ao fazer logout');
+    }
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Logout realizado!',
+      showConfirmButton: false,
+      timer: 1500
+    });
+
+    // Navegação para /login deve ser feita no frontend após logout bem-sucedido
+  } catch (err: any) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro ao sair',
+      text: err.message || 'Falha ao fazer logout',
+    });
+  }
+};
+
 
 router.get(
   '/profile',

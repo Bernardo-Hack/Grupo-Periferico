@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -173,49 +173,68 @@ const Profile: React.FC = () => {
     );
   }
 
+  function handleLogout(): void {
+    // Implementar lógica de logout, por exemplo:
+    fetch('http://localhost:5000/user/logout', {
+      method: 'POST',
+      credentials: 'include',
+    }).then(() => {
+      navigate('/');
+    });
+  }
+
   return (
     <div className={`profile-page ${theme}`}>
       <Navbar />
       <header className="profile-header">
-        <div className="header-content">
-          <div className="profile-info">
-            <div className="user-details">
-              {profile?.user ? (
-                <>
-                  <h1>{profile.user.nome}</h1>
-                  <p>Telefone: {profile.user.telefone}</p>
-                  <p>Membro desde: {profile.user.data_cadastro}</p>
-                </>
-              ) : (
-                <p>Dados do usuário não encontrados</p>
-              )}
+      <div className="header-content">
+        <div className="profile-info">
+        <div className="user-details">
+          {profile?.user ? (
+          <>
+            <h1>{profile.user.nome}</h1>
+            <p>Telefone: {profile.user.telefone}</p>
+            <p>Membro desde: {profile.user.data_cadastro}</p>
+          </>
+          ) : (
+          <p>Dados do usuário não encontrados</p>
+          )}
 
-              <div className="theme-selector">
-                <label htmlFor="theme-toggle">Modo Escuro:</label>
-                <button 
-                  id="theme-toggle"
-                  className="theme-toggle"
-                  onClick={toggleTheme}
-                  aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
-                >
-                  <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
-                    <div className="switch-handle"></div>
-                  </div>
-                  <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
-                </button>
-              </div>
-
-              <div className="delete-account-section">
-                <button 
-                  className="delete-account-btn"
-                  onClick={handleDeleteAccount}
-                >
-                  Excluir Minha Conta
-                </button>
-              </div>
+          <div className="theme-selector">
+          <label htmlFor="theme-toggle">Modo Escuro:</label>
+          <button 
+            id="theme-toggle"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
+          >
+            <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
+            <div className="switch-handle"></div>
             </div>
+            <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
+          </button>
+          </div>
+
+          <div className="logout-section">
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+          >
+            Sair da Conta
+          </button>
+          </div>
+
+          <div className="delete-account-section">
+          <button 
+            className="delete-account-btn"
+            onClick={handleDeleteAccount}
+          >
+            Excluir Minha Conta
+          </button>
           </div>
         </div>
+        </div>
+      </div>
       </header>
 
       <main className="profile-content">
