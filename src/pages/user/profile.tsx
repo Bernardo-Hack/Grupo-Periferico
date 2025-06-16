@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -7,10 +7,25 @@ import '../../layouts/style/globalCSS.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
-interface Doacao {
+interface DoacaoDinheiro {
   id: number;
   valor: number;
   metodo: string;
+  data_doacao: string;
+}
+
+interface DoacaoRoupa {
+  id: number;
+  descricao: string;
+  quantidade: number;
+  tamanho?: string;
+  data_doacao: string;
+}
+
+interface DoacaoAlimento {
+  id: number;
+  descricao: string;
+  quantidade_kg: number;
   data_doacao: string;
 }
 
@@ -22,7 +37,9 @@ interface UserProfile {
 
 interface ProfileData {
   user: UserProfile;
-  doacoes: Doacao[];
+  doacoesDinheiro: DoacaoDinheiro[];
+  doacoesRoupa: DoacaoRoupa[];
+  doacoesAlimento: DoacaoAlimento[];
 }
 
 const Profile: React.FC = () => {
@@ -40,34 +57,41 @@ const Profile: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const res = await fetch('http://localhost:5000/user/profile', {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (res.status === 401) {
         navigate('/registro');
         return;
       }
-      
+
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`Erro ${res.status}: ${errorText}`);
       }
-      
+
       const data = await res.json();
-      
-      // Verificar e converter valores numéricos
-      if (data.doacoes) {
-        data.doacoes = data.doacoes.map((d: any) => ({
+
+      // Conversões numéricas seguras
+      if (data.doacoesDinheiro) {
+        data.doacoesDinheiro = data.doacoesDinheiro.map((d: any) => ({
           ...d,
           valor: typeof d.valor === 'string' ? parseFloat(d.valor) : d.valor
         }));
       }
-      
+
+      if (data.doacoesAlimento) {
+        data.doacoesAlimento = data.doacoesAlimento.map((d: any) => ({
+          ...d,
+          quantidade_kg: typeof d.quantidade_kg === 'string' ? parseFloat(d.quantidade_kg) : d.quantidade_kg
+        }));
+      }
+
       setProfile(data);
-      
+
     } catch (err: any) {
       console.error('Erro ao buscar perfil:', err);
       setError(err.message || 'Erro ao carregar perfil');
@@ -117,7 +141,6 @@ const Profile: React.FC = () => {
           confirmButtonColor: '#3085d6',
         });
 
-        // Redirecionar para página inicial
         navigate('/');
 
       } catch (err: any) {
@@ -150,65 +173,118 @@ const Profile: React.FC = () => {
     );
   }
 
+  function handleLogout(): void {
+    // Implementar lógica de logout, por exemplo:
+    fetch('http://localhost:5000/user/logout', {
+      method: 'POST',
+      credentials: 'include',
+    }).then(() => {
+      navigate('/');
+    });
+  }
+
   return (
     <div className={`profile-page ${theme}`}>
       <Navbar />
       <header className="profile-header">
-        <div className="header-content">
-          <div className="profile-info">
-            <div className="user-details">
-              {profile?.user ? (
-                <>
-                  <h1>{profile.user.nome}</h1>
-                  <p>Telefone: {profile.user.telefone}</p>
-                  <p>Membro desde: {profile.user.data_cadastro}</p>
-                </>
-              ) : (
-                <p>Dados do usuário não encontrados</p>
-              )}
-              
-              <div className="theme-selector">
-                <label htmlFor="theme-toggle">Modo Escuro:</label>
-                <button 
-                  id="theme-toggle"
-                  className="theme-toggle"
-                  onClick={toggleTheme}
-                  aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
-                >
-                  <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
-                    <div className="switch-handle"></div>
-                  </div>
-                  <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
-                </button>
-              </div>
-              
-              <div className="delete-account-section">
-                <button 
-                  className="delete-account-btn"
-                  onClick={handleDeleteAccount}
-                >
-                  Excluir Minha Conta
-                </button>
-              </div>
+      <div className="header-content">
+        <div className="profile-info">
+        <div className="user-details">
+          {profile?.user ? (
+          <>
+            <h1>{profile.user.nome}</h1>
+            <p>Telefone: {profile.user.telefone}</p>
+            <p>Membro desde: {profile.user.data_cadastro}</p>
+          </>
+          ) : (
+          <p>Dados do usuário não encontrados</p>
+          )}
+
+          <div className="theme-selector">
+          <label htmlFor="theme-toggle">Modo Escuro:</label>
+          <button 
+            id="theme-toggle"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
+          >
+            <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
+            <div className="switch-handle"></div>
             </div>
+            <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
+          </button>
+          </div>
+
+          <div className="logout-section">
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+          >
+            Sair da Conta
+          </button>
+          </div>
+
+          <div className="delete-account-section">
+          <button 
+            className="delete-account-btn"
+            onClick={handleDeleteAccount}
+          >
+            Excluir Minha Conta
+          </button>
           </div>
         </div>
+        </div>
+      </div>
       </header>
 
       <main className="profile-content">
         <section className="donations-section">
           <h2>Minhas Doações</h2>
-          {profile?.doacoes && profile.doacoes.length > 0 ? (
-            <ul>
-              {profile.doacoes.map(d => (
-                <li key={d.id}>
-                  <strong>R$ {typeof d.valor === 'number' ? d.valor.toFixed(2) : 'Valor inválido'}</strong> 
-                  {' '}via {d.metodo} em {d.data_doacao}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Você ainda não fez nenhuma doação.</p>
+
+          {(profile?.doacoesDinheiro?.length ?? 0) > 0 && (
+            <>
+              <h3>Doações em Dinheiro</h3>
+              <ul>
+                {(profile?.doacoesDinheiro ?? []).map(d => (
+                  <li key={`d-${d.id}`}>
+                    <strong>R$ {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {(profile?.doacoesRoupa?.length ?? 0) > 0 && (
+            <>
+              <h3>Doações de Roupas</h3>
+              <ul>
+                {(profile?.doacoesRoupa ?? []).map(d => (
+                  <li key={`r-${d.id}`}>
+                    {d.quantidade}x {d.descricao} (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {(profile?.doacoesAlimento?.length ?? 0) > 0 && (
+            <>
+              <h3>Doações de Alimentos</h3>
+              <ul>
+                {(profile?.doacoesAlimento ?? []).map(d => (
+                  <li key={`a-${d.id}`}>
+                    {d.quantidade_kg.toFixed(2)} kg de {d.descricao} em {d.data_doacao}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {profile &&
+            profile.doacoesDinheiro.length === 0 &&
+            profile.doacoesRoupa.length === 0 &&
+            profile.doacoesAlimento.length === 0 && (
+              <p>Você ainda não fez nenhuma doação.</p>
           )}
         </section>
       </main>
