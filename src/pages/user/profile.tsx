@@ -1,4 +1,4 @@
-import { useEffect, useState, MouseEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -214,16 +214,7 @@ const Profile: React.FC = () => {
             <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
           </button>
           </div>
-
-          <div className="logout-section">
-          <button
-            className="logout-btn"
-            onClick={handleLogout}
-          >
-            Sair da Conta
-          </button>
-          </div>
-
+          
           <div className="delete-account-section">
           <button 
             className="delete-account-btn"
