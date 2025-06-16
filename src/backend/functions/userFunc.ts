@@ -99,45 +99,69 @@ router.put(
 
 router.get(
   '/profile',
-  (req: Request, res: Response, next: NextFunction) => {
-    (async () => {
-      try {
-        const userId = req.session.userId;
-        if (!userId) {
-          return res.status(401).json({ error: 'Não autenticado.' });
-        }
+  asyncHandler(async (req, res) => {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Não autenticado.' });
+    }
 
-        const [userRows] = await pool.query<RowDataPacket[]>(
-          `SELECT nome, telefone, DATE_FORMAT(data_cadastro, '%Y-%m-%d') AS data_cadastro
-           FROM usuario
-           WHERE id = ?`,
-          [userId]
-        );
-        if (userRows.length === 0) {
-          return res.status(404).json({ error: 'Usuário não encontrado.' });
-        }
-        const user = userRows[0];
+    const [userRows] = await pool.query<RowDataPacket[]>(
+      `SELECT nome, telefone, DATE_FORMAT(data_cadastro, '%Y-%m-%d') AS data_cadastro
+       FROM usuario
+       WHERE id = ?`,
+      [userId]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    const user = userRows[0];
 
-        const [donRows] = await pool.query<RowDataPacket[]>(
-          `SELECT id, valor, metodo_pagamento AS metodo,
-            DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
-           FROM DoacaoDinheiro
-           WHERE usuario_id = ?
-           ORDER BY data_doacao DESC`,
-          [userId]
-        );
+    const [donRows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, valor, metodo_pagamento AS metodo,
+        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
+       FROM DoacaoDinheiro
+       WHERE usuario_id = ?
+       ORDER BY data_doacao DESC`,
+      [userId]
+    );
 
-        return res.status(200).json({
-          user,
-          doacoes: donRows
-        });
-      } catch (err) {
-        console.error('Erro ao buscar perfil:', err);
-        return res.status(500).json({ error: 'Erro interno no servidor.' });
-      }
-    })().catch(next);
-  }
+    const [donDinheiro] = await pool.query<RowDataPacket[]>(
+      `SELECT 'dinheiro' AS tipo, id, valor, metodo_pagamento AS metodo,
+        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
+      FROM DoacaoDinheiro
+      WHERE usuario_id = ?
+      ORDER BY data_doacao DESC`,
+      [userId]
+    );
+
+    const [donRoupa] = await pool.query<RowDataPacket[]>(
+      `SELECT 'roupa' AS tipo, id, tipo AS descricao, quantidade, tamanho,
+        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
+      FROM DoacaoRoupa
+      WHERE usuario_id = ?
+      ORDER BY data_doacao DESC`,
+      [userId]
+    );
+
+    const [donAlimento] = await pool.query<RowDataPacket[]>(
+      `SELECT 'alimento' AS tipo, id, tipo AS descricao, quantidade_kg,
+        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
+      FROM DoacaoAlimento
+      WHERE usuario_id = ?
+      ORDER BY data_doacao DESC`,
+      [userId]
+    );
+
+
+    return res.status(200).json({
+      user,
+      doacoesDinheiro: donDinheiro,
+      doacoesRoupa: donRoupa,
+      doacoesAlimento: donAlimento
+    });
+  })
 );
+
 
 router.delete(
   '/delete',
