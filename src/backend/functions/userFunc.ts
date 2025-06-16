@@ -1,8 +1,7 @@
 // src/backend/functions/userFunc.ts
 import { Router, Request, Response, NextFunction } from 'express';
-import pool from '../config/db';                 // seu pool mysql2/promise
 import { hashPassword, comparePassword } from '../utils/encrypt';
-import { RowDataPacket } from 'mysql2';
+import pool from '../config/db'; // Agora aponta para o pool do PostgreSQL
 import Swal from 'sweetalert2';
 
 const router = Router();
@@ -17,17 +16,20 @@ router.post(
   '/reg_user',
   asyncHandler(async (req, res) => {
     console.log('🔔 Body em POST /user/reg_user:', req.body);
+
     const { nome, cpf, telefone, dt_nasc, senha } = req.body;
     if (!nome || !cpf || !telefone || !dt_nasc || !senha) {
       return res.status(400).json({ error: 'Preencha todos os campos.' });
     }
     const hashed = await hashPassword(senha);
+
     await pool.query(
       `INSERT INTO usuario
          (nome, cpf, telefone, senha_hash, data_nascimento, data_cadastro)
-       VALUES (?, ?, ?, ?, ?, NOW())`,
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
       [nome, cpf, telefone, hashed, dt_nasc]
     );
+
     return res.status(201).json({ ok: true });
   })
 );
@@ -44,10 +46,12 @@ router.post(
       return res.status(400).json({ error: 'Preencha nome e senha.' });
     }
 
-    const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT id, nome, senha_hash FROM usuario WHERE nome = ?',
+    // ALTERAÇÃO: Desestruturação { rows } e placeholder $1
+    const { rows } = await pool.query(
+      'SELECT id, nome, senha_hash FROM usuario WHERE nome = $1',
       [nome]
     );
+
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Nome ou senha inválidos.' });
     }
@@ -89,8 +93,9 @@ router.put(
 
     const { nome, telefone, data_nascimento } = req.body;
 
+    // ALTERAÇÃO: Placeholders
     await pool.query(
-      'UPDATE usuario SET nome = ?, telefone = ?, data_nascimento = ? WHERE id = ?',
+      'UPDATE usuario SET nome = $1, telefone = $2, data_nascimento = $3 WHERE id = $4',
       [nome, telefone, data_nascimento, req.session.userId]
     );
 
@@ -135,10 +140,11 @@ router.get(
       return res.status(401).json({ error: 'Não autenticado.' });
     }
 
-    const [userRows] = await pool.query<RowDataPacket[]>(
-      `SELECT nome, telefone, DATE_FORMAT(data_cadastro, '%Y-%m-%d') AS data_cadastro
-       FROM usuario
-       WHERE id = ?`,
+    // ALTERAÇÃO: 'DATE_FORMAT' (MySQL) trocado por 'TO_CHAR' (PostgreSQL).
+    // ALTERAÇÃO: Desestruturação { rows: userRows } e placeholder $1.
+    const { rows: userRows } = await pool.query(
+      `SELECT nome, telefone, TO_CHAR(data_cadastro, 'YYYY-MM-DD') AS data_cadastro
+       FROM usuario WHERE id = $1`,
       [userId]
     );
     if (userRows.length === 0) {
@@ -146,48 +152,29 @@ router.get(
     }
     const user = userRows[0];
 
-    const [donRows] = await pool.query<RowDataPacket[]>(
-      `SELECT id, valor, metodo_pagamento AS metodo,
-        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
-       FROM DoacaoDinheiro
-       WHERE usuario_id = ?
-       ORDER BY data_doacao DESC`,
+    // Buscando as doações e formatando a data com TO_CHAR
+    const { rows: doacoesDinheiro } = await pool.query(
+      `SELECT 'dinheiro' AS tipo, id, valor, metodo_pagamento AS metodo, TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
+       FROM DoacaoDinheiro WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
       [userId]
     );
-
-    const [donDinheiro] = await pool.query<RowDataPacket[]>(
-      `SELECT 'dinheiro' AS tipo, id, valor, metodo_pagamento AS metodo,
-        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
-      FROM DoacaoDinheiro
-      WHERE usuario_id = ?
-      ORDER BY data_doacao DESC`,
+    const { rows: doacoesRoupa } = await pool.query(
+      `SELECT 'roupa' AS tipo, id, tipo AS descricao, quantidade, tamanho, TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
+       FROM DoacaoRoupa WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
       [userId]
     );
-
-    const [donRoupa] = await pool.query<RowDataPacket[]>(
-      `SELECT 'roupa' AS tipo, id, tipo AS descricao, quantidade, tamanho,
-        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
-      FROM DoacaoRoupa
-      WHERE usuario_id = ?
-      ORDER BY data_doacao DESC`,
-      [userId]
-    );
-
-    const [donAlimento] = await pool.query<RowDataPacket[]>(
-      `SELECT 'alimento' AS tipo, id, tipo AS descricao, quantidade_kg,
-        DATE_FORMAT(data_doacao, '%Y-%m-%d %H:%i:%s') AS data_doacao
-      FROM DoacaoAlimento
-      WHERE usuario_id = ?
-      ORDER BY data_doacao DESC`,
+    const { rows: doacoesAlimento } = await pool.query(
+      `SELECT 'alimento' AS tipo, id, tipo AS descricao, quantidade_kg, TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
+       FROM DoacaoAlimento WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
       [userId]
     );
 
 
     return res.status(200).json({
       user,
-      doacoesDinheiro: donDinheiro,
-      doacoesRoupa: donRoupa,
-      doacoesAlimento: donAlimento
+      doacoesDinheiro,
+      doacoesRoupa,
+      doacoesAlimento
     });
   })
 );
@@ -206,9 +193,10 @@ router.delete(
       return res.status(400).json({ error: 'Senha é obrigatória' });
     }
 
-    // Buscar o usuário para verificar a senha
-    const [userRows] = await pool.query<RowDataPacket[]>(
-      'SELECT id, senha_hash FROM usuario WHERE id = ?',
+    // ALTERAÇÃO: Buscar o usuário para verificar a senha com a sintaxe do PostgreSQL.
+    // Placeholder '?' trocado por '$1' e desestruturação de resultado '[userRows]' por '{ rows: userRows }'.
+    const { rows: userRows } = await pool.query(
+      'SELECT id, senha_hash FROM usuario WHERE id = $1',
       [userId]
     );
     
@@ -222,53 +210,44 @@ router.delete(
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    // Iniciar transação para deletar dados associados
-    const connection = await pool.getConnection();
-    await connection.beginTransaction();
+    // ALTERAÇÃO: Iniciar transação com o padrão do node-postgres.
+    // Obtemos um 'client' do pool para todas as operações da transação.
+    const client = await pool.connect();
 
     try {
-      // Deletar doações monetárias
-      await connection.query(
-        'DELETE FROM DoacaoDinheiro WHERE usuario_id = ?',
-        [userId]
-      );
+      // 1. Inicia a transação
+      await client.query('BEGIN');
 
-      // Deletar doações de roupas
-      await connection.query(
-        'DELETE FROM DoacaoRoupa WHERE usuario_id = ?',
-        [userId]
-      );
+      // 2. Executa todas as exclusões usando o mesmo 'client'.
+      //    Placeholders '?' foram trocados por '$1'.
+      await client.query('DELETE FROM DoacaoDinheiro WHERE usuario_id = $1', [userId]);
+      await client.query('DELETE FROM DoacaoRoupa WHERE usuario_id = $1', [userId]);
+      await client.query('DELETE FROM DoacaoAlimento WHERE usuario_id = $1', [userId]);
+      await client.query('DELETE FROM usuario WHERE id = $1', [userId]);
 
-      // Deletar doações de alimentos
-      await connection.query(
-        'DELETE FROM DoacaoAlimento WHERE usuario_id = ?',
-        [userId]
-      );
+      // 3. Se tudo deu certo, confirma a transação.
+      await client.query('COMMIT')
 
-      // Deletar o usuário
-      await connection.query(
-        'DELETE FROM usuario WHERE id = ?',
-        [userId]
-      );
-
-      await connection.commit();
-
-      // Encerrar a sessão
+      // 4. Encerrar a sessão do usuário após o sucesso.
       req.session.destroy((err) => {
         if (err) {
           console.error('Erro ao destruir sessão:', err);
-          return res.status(500).json({ error: 'Erro ao encerrar sessão' });
+          // Nota: a transação já foi comitada, mas o logout falhou.
+          // A resposta de erro aqui é sobre a sessão, não sobre o banco.
+          return res.status(500).json({ error: 'Conta excluída, mas houve um erro ao encerrar a sessão.' });
         }
         res.clearCookie('connect.sid');
-        return res.status(200).json({ ok: true });
+        return res.status(200).json({ ok: true, message: 'Conta excluída com sucesso.' });
       });
 
     } catch (err) {
-      await connection.rollback();
-      console.error('Erro ao deletar conta:', err);
-      return res.status(500).json({ error: 'Erro interno ao excluir conta' });
+      // 5. Se qualquer uma das queries falhar, desfaz a transação.
+      await client.query('ROLLBACK');
+      console.error('Erro ao deletar conta (transação revertida):', err);
+      return res.status(500).json({ error: 'Erro interno ao excluir conta.' });
     } finally {
-      connection.release();
+      // 6. Libera o cliente de volta para o pool, ocorrendo erro ou não.
+      client.release();
     }
   })
 );

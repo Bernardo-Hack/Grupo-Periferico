@@ -1,7 +1,6 @@
 // adminFunc.ts
 import { Router, Request, Response, NextFunction } from 'express';
 import db from '../config/db';
-import { RowDataPacket } from 'mysql2';
 import { comparePassword } from '../utils/encrypt';
 
 const router = Router();
@@ -12,6 +11,7 @@ const asyncHandler = (fn: any) =>
     Promise.resolve(fn(req, res, next)).catch(next);
 
 // Extensão da sessão
+
 declare module 'express-session' {
   interface SessionData {
     adminId?: number;
@@ -19,20 +19,22 @@ declare module 'express-session' {
 }
 
 // ========== MIDDLEWARES ==========
+
 export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   req.session.adminId ? next() : res.redirect('/admin/login');
 };
 
 // ========== ROTAS ADMIN ==========
+
 router.get('/admin/:username/:password', asyncHandler(async (req: Request, res: Response) => {
   const { username, password } = req.params;
 
-  const [rows] = await db.query<RowDataPacket[]>(
-    'SELECT id, senha_hash FROM admin WHERE username = ?',
+  const { rows } = await db.query(
+    'SELECT id, senha_hash FROM admin WHERE username = $1',
     [username]
   );
 
-  if (!rows[0] || !(await comparePassword(password, rows[0].senha_hash))) {
+  if (rows.length === 0 || !(await comparePassword(password, rows[0].senha_hash))) {
     return res.status(401).json({ error: 'Acesso negado' });
   }
 
@@ -45,9 +47,11 @@ router.get('/admin/logout', (req: Request, res: Response) => {
 });
 
 // ========== FUNÇÕES DASHBOARD ==========
+
 export const loadUser = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [results] = await db.query<RowDataPacket[]>(
+    // ALTERAÇÃO: A desestruturação [results] foi trocada por { rows: results }
+    const { rows: results } = await db.query(
       'SELECT * FROM usuario ORDER BY nome'
     );
 
@@ -64,7 +68,8 @@ export const loadUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const [results] = await db.query<RowDataPacket[]>(`
+    // ALTERAÇÃO: A desestruturação [results] foi trocada por { rows: results }
+    const { rows: results } = await db.query(`
       SELECT d.id, u.nome, d.valor, d.metodo_pagamento, d.data_doacao
       FROM DoacaoDinheiro d
       JOIN Usuario u ON d.usuario_id = u.id
@@ -82,6 +87,7 @@ export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // ========== ROTAS PROTEGIDAS ==========
+
 router.get('/admin/dashboard', adminAuth, loadUser);
 router.get('/admin/doacoes', adminAuth, loadDoacao);
 

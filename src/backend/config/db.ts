@@ -1,11 +1,11 @@
 // src/backend/config/db.ts
 
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+const requiredEnvVars = ['PGHOST', 'PGUSER', 'DB_PASSWORD', 'DB_NAME'];
 
 for (const varName of requiredEnvVars) {
   if (!process.env[varName]) {
@@ -14,32 +14,33 @@ for (const varName of requiredEnvVars) {
   }
 }
 
-let pool: mysql.Pool;
+let pool: Pool;
 
 try {
-  pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
+  pool = new Pool({
+    host: process.env.PGHOST,
+    user: process.env.PGUSER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    charset: 'utf8mb4', // charset recomendado para evitar problemas com emojis e acentos
+    port: Number(process.env.DB_PORT) || 5432, // Porta padrão do PostgreSQL
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
 
-  // Testa conexão inicial (opcional, mas útil para logs)
-  pool.getConnection()
-    .then(conn => {
-      console.log('✅ MySQL pool conectado com sucesso!');
-      conn.release();
+  // Testa a conexão inicial com o banco de dados (opcional, mas útil)
+  pool.query('SELECT NOW()')
+    .then(res => {
+      console.log('✅ Pool do PostgreSQL conectado com sucesso! Horário do banco:', res.rows[0].now);
     })
     .catch(err => {
-      console.error('❌ Erro ao conectar ao MySQL:', err.message);
+      console.error('❌ Erro ao conectar ao PostgreSQL:', err.message);
+      // Em um ambiente de produção, você pode querer encerrar o processo se a conexão falhar
+      // process.exit(1);
     });
 
 } catch (err: any) {
-  console.error('❌ Erro inesperado ao criar o pool do MySQL:', err.message);
+  console.error('❌ Erro inesperado ao criar o pool do PostgreSQL:', err.message);
   process.exit(1);
 }
 

@@ -65,8 +65,8 @@ export const registerDonation = async (req: Request, res: Response, next: NextFu
 
     // Monta e executa o INSERT
     const insertSQL = `
-      INSERT INTO doacaodinheiro (usuario_id, valor, metodo_pagamento)
-      VALUES (?, ?, ?)
+      INSERT INTO DoacaoDinheiro (usuario_id, valor, metodo_pagamento)
+      VALUES ($1, $2, $3)
     `;
     console.log(
       'Executando INSERT em doacaodinheiro:',
@@ -75,6 +75,7 @@ export const registerDonation = async (req: Request, res: Response, next: NextFu
       [userId, valor, metodo_pagamento]
     );
     await db.query(insertSQL, [userId, valor, metodo_pagamento]);
+    console.log('Doação de dinheiro registrada com sucesso.');
 
     return res.status(201).json({
       success: true,
@@ -135,7 +136,7 @@ export const registerClothesDonation = async (req: Request, res: Response, next:
 
     const insertSQL = `
       INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao)
-      VALUES (?, ?, ?, ?, NOW())
+      VALUES ($1, $2, $3, $4, NOW())
     `;
     console.log(
       'Executando INSERT em DoacaoRoupa:',
@@ -144,6 +145,7 @@ export const registerClothesDonation = async (req: Request, res: Response, next:
       [userId, tipo, quantidade, tamanho || null]
     );
     await db.query(insertSQL, [userId, tipo, quantidade, tamanho || null]);
+    console.log('Doação de roupa registrada com sucesso.');
 
     return res.status(201).json({
       success: true,
@@ -200,7 +202,7 @@ export const registerFoodDonation = async (req: Request, res: Response, next: Ne
 
     const insertSQL = `
       INSERT INTO DoacaoAlimento (usuario_id, tipo, quantidade_kg, data_doacao)
-      VALUES (?, ?, ?, NOW())
+      VALUES ($1, $2, $3, NOW())
     `;
     console.log(
       'Executando INSERT em DoacaoAlimento:',
@@ -208,8 +210,8 @@ export const registerFoodDonation = async (req: Request, res: Response, next: Ne
       'valores:',
       [userId, tipo, quantidade]
     );
-    const [result] = await db.query(insertSQL, [userId, tipo, quantidade]);
-    console.log('Doação de alimento registrada com sucesso:', result);
+    await db.query(insertSQL, [userId, tipo, quantidade]);
+    console.log('Doação de alimento registrada com sucesso.');
 
     return res.status(201).json({
       success: true,
