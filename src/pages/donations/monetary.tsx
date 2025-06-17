@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
-import '../../layouts/style/donations_global.css';
+import { useTheme } from '../../contexts/ThemeContext';
+import apiClient from '../../api'; // 👈 1. Importar
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '../../layouts/style/donations_global.css';
 
 const Monetary: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const { theme } = useTheme(); // Obtenha o tema atual
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [valor, setValor] = useState<string>(''); // string para input, converteremos antes de enviar
   const [metodoPagamento, setMetodoPagamento] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
-  const apiUrl = process.env.VITE_API_URL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,25 +45,16 @@ const Monetary: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/doacoes/dinheiro`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nome,
-          email,
-          valor: valorNum,
-          metodo_pagamento: metodoPagamento,
-        }),
+      // 👇 2. Usar apiClient em vez de fetch
+      const response = await apiClient.post('/api/doacoes/dinheiro', {
+        nome,
+        email,
+        valor: valorNum,
+        metodo_pagamento: metodoPagamento,
       });
-      const json = await res.json();
-      console.log('Monetary - Resposta da API:', json);
 
-      if (!res.ok) {
-        throw new Error(json.message || 'Erro ao processar doação');
-      }
+      const json = response.data;
+
       if (json.redirectUrl) {
         window.location.href = json.redirectUrl;
       } else {
@@ -68,21 +62,18 @@ const Monetary: React.FC = () => {
           icon: 'success',
           title: 'Doação realizada com sucesso!',
           text: 'Obrigado por sua contribuição!',
-          confirmButtonColor: '#3085d6',
           timer: 3000,
-          timerProgressBar: true,
           willClose: () => {
             window.location.href = '/doacao/sucesso';
           }
         });
       }
-    } catch (err) {
-      console.error('Monetary - Erro na doação (frontend):', err);
+    } catch (err: any) {
+      console.error('Erro na doação (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
-        confirmButtonColor: '#3085d6'
+        text: err.response?.data?.message || 'Ocorreu um erro inesperado.',
       });
     } finally {
       setLoading(false);
@@ -90,7 +81,7 @@ const Monetary: React.FC = () => {
   };
 
   return (
-    <div className="monetary-page">
+    <div className="monetary-page" data-theme={theme}>
       <Navbar />
 
       <header className="donation-header">

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
-import '../../layouts/style/donations_global.css';
+import { useTheme } from '../../contexts/ThemeContext';
+import apiClient from '../../api'; // 👈 1. Importar
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
-import { useTheme } from '../../contexts/ThemeContext';
+import '../../layouts/style/donations_global.css';
 
 const Clothes: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -46,24 +47,18 @@ const Clothes: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`${apiUrl}/api/doacoes/roupas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nome: donationName,
-          email: donationEmail,
-          quantidade: donationQuantity,
-          tipo: donationType,
-          tamanho: donationSize
-        }),
-        credentials: 'include'
+      // 👇 2. Usar apiClient em vez de fetch
+      const response = await apiClient.post('/api/doacoes/roupas', {
+        nome: donationName,
+        email: donationEmail,
+        quantidade: donationQuantity,
+        tipo: donationType,
+        tamanho: donationSize
       });
 
-      const json = await res.json();
+      const json = response.data;
 
-      if (!res.ok) {
+      if (!json.ok) {
         throw new Error(json.message || 'Erro ao processar doação');
       }
 
@@ -82,15 +77,13 @@ const Clothes: React.FC = () => {
           }
         });
       }
-
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Erro na doação (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
-        confirmButtonColor: '#3085d6'
+        text: err.response?.data?.message || 'Ocorreu um erro inesperado.',
       });
-      console.error('Erro na doação:', err);
     } finally {
       setLoading(false);
     }

@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import { Footer } from '../../layouts/shared/footer';
-import '../../layouts/style/donations_global.css';
+import { useTheme } from '../../contexts/ThemeContext';
+import apiClient from '../../api'; // 👈 1. Importar
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
-import { useTheme } from '../../contexts/ThemeContext'; 
+import '../../layouts/style/donations_global.css';
 
 const Foods: React.FC = () => {
+  const { theme } = useTheme(); // Obtenha o tema atual
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [tipo, setTipo] = useState('');
   const [quantidade, setQuantidade] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const { theme } = useTheme(); // Obtenha o tema atual
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
   const apiUrl = process.env.VITE_API_URL
@@ -20,7 +22,7 @@ const Foods: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const quantidadeNum = parseFloat(quantidade);
-    
+
     console.log('Valores enviados:', { nome, email, tipo, quantidade, quantidadeNum });
 
     if (!nome || !email || !tipo || !quantidade) {
@@ -38,23 +40,17 @@ const Foods: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/doacoes/alimentos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nome,
-          email,
-          tipo,
-          quantidade: quantidadeNum,
-        }),
+      // 👇 2. Usar apiClient em vez de fetch
+      const response = await apiClient.post('/api/doacoes/alimentos', {
+        nome,
+        email,
+        tipo,
+        quantidade: quantidadeNum,
       });
-      const json = await res.json();
-      console.log('Resposta da API:', json);
 
-      if (!res.ok) {
+      const json = response.data;
+
+      if (!json.ok) {
         throw new Error(json.message || 'Erro ao processar doação');
       }
 
@@ -73,13 +69,12 @@ const Foods: React.FC = () => {
           }
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro na doação (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
-        confirmButtonColor: '#3085d6'
+        text: err.response?.data?.message || 'Ocorreu um erro inesperado.',
       });
     } finally {
       setLoading(false);

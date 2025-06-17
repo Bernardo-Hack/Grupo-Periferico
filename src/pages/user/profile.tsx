@@ -2,10 +2,11 @@ import { useEffect, useState, MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
 import { useTheme } from '../../contexts/ThemeContext';
-import '../../layouts/style/profileCSS.css';
-import '../../layouts/style/globalCSS.css';
+import apiClient from '../../api'; // 👈 Importe o cliente da API
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '../../layouts/style/profileCSS.css';
+import '../../layouts/style/globalCSS.css';
 
 interface DoacaoDinheiro {
   id: number;
@@ -50,55 +51,47 @@ const Profile: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 1. Faz a chamada à API e obtém a resposta
+        const response = await apiClient.get('/user/profile');
+
+        // 2. Declara a variável 'data' APENAS UMA VEZ
+        const data: ProfileData = response.data;
+
+        // 3. Lógica de conversão que você já tinha (agora aplicada à variável 'data')
+        if (data.doacoesDinheiro) {
+          data.doacoesDinheiro = data.doacoesDinheiro.map((d: any) => ({
+            ...d,
+            valor: typeof d.valor === 'string' ? parseFloat(d.valor) : d.valor
+          }));
+        }
+        if (data.doacoesAlimento) {
+          data.doacoesAlimento = data.doacoesAlimento.map((d: any) => ({
+            ...d,
+            quantidade_kg: typeof d.quantidade_kg === 'string' ? parseFloat(d.quantidade_kg) : d.quantidade_kg
+          }));
+        }
+
+        setProfile(data);
+
+      } catch (err: any) {
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          navigate('/registro');
+          return;
+        }
+        console.error('Erro ao buscar perfil:', err);
+        setError(err.response?.data?.error || err.message || 'Erro ao carregar perfil');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProfile();
   }, [navigate]);
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const res = await fetch('http://localhost:5000/user/profile', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (res.status === 401) {
-        navigate('/registro');
-        return;
-      }
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Erro ${res.status}: ${errorText}`);
-      }
-
-      const data = await res.json();
-
-      // Conversões numéricas seguras
-      if (data.doacoesDinheiro) {
-        data.doacoesDinheiro = data.doacoesDinheiro.map((d: any) => ({
-          ...d,
-          valor: typeof d.valor === 'string' ? parseFloat(d.valor) : d.valor
-        }));
-      }
-
-      if (data.doacoesAlimento) {
-        data.doacoesAlimento = data.doacoesAlimento.map((d: any) => ({
-          ...d,
-          quantidade_kg: typeof d.quantidade_kg === 'string' ? parseFloat(d.quantidade_kg) : d.quantidade_kg
-        }));
-      }
-
-      setProfile(data);
-
-    } catch (err: any) {
-      console.error('Erro ao buscar perfil:', err);
-      setError(err.message || 'Erro ao carregar perfil');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteAccount = async () => {
     const { value: password } = await Swal.fire({
@@ -173,15 +166,14 @@ const Profile: React.FC = () => {
     );
   }
 
-  function handleLogout(): void {
-    // Implementar lógica de logout, por exemplo:
-    fetch('http://localhost:5000/user/logout', {
-      method: 'POST',
-      credentials: 'include',
-    }).then(() => {
+  const handleLogout = async () => {
+    try {
+      await apiClient.post('/user/logout');
       navigate('/');
-    });
-  }
+    } catch (err) {
+      Swal.fire('Erro', 'Não foi possível sair da conta.', 'error');
+    }
+  };
 
   return (
     <div className={`profile-page ${theme}`}>
