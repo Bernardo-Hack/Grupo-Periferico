@@ -18,11 +18,10 @@ let pool: Pool;
 
 try {
   pool = new Pool({
-    host: process.env.PGHOST,
-    user: process.env.PGUSER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: Number(process.env.DB_PORT) || 5432, // Porta padrão do PostgreSQL
+    connectionString: process.env.DB_url,  
+    ssl: {
+      rejectUnauthorized: false
+    },
     max: 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
