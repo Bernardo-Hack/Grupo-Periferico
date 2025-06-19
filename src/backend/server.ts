@@ -7,9 +7,13 @@ import session from 'express-session';
 import cors from 'cors';
 
 import userRoutes from './functions/userFunc';
-import { loadUser, loadDoacao } from './functions/adminFunc';
 import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
 import testDB from './functions/testDB';
+import {
+  graficoDinheiro,
+  graficoRoupas,
+  graficoAlimentos
+} from './functions/graficosFunc'; // 🔁 IMPORTAÇÃO AQUI
 
 declare module 'express-session' {
   interface SessionData {
@@ -22,12 +26,11 @@ const app = express();
 
 // ------------------------------------------------------------
 // 1) Middleware de parsing do body
-app.use(express.json()); // Para JSON
-app.use(express.urlencoded({ extended: true })); // Para form-urlencoded, se necessário
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// 1.1) Middleware de logging (útil para debug de req.body)
+// 1.1) Logger
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Só loga métodos que costumam ter body (POST, PUT, PATCH), mas você pode logar sempre
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - body:`, req.body);
   } else {
@@ -37,9 +40,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // ------------------------------------------------------------
-// 2) CORS + sessão
+// 2) CORS + Sessão
 app.use(cors({
-  origin: 'http://localhost:5173', // ajuste para a URL do frontend
+  origin: 'http://localhost:5173',
   credentials: true,
 }));
 
@@ -49,65 +52,56 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false,       // em produção, se usar HTTPS, coloque true
+    secure: false,
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 24, // 1 dia
+    maxAge: 1000 * 60 * 60 * 24,
   },
 }));
 
 // ------------------------------------------------------------
-// 3) Rotas
-
-// Rotas de usuário (autenticação, perfil, etc.)
-app.use('/user', userRoutes);
-
-// Rotas de dashboard admin
-app.get('/adminUserDashboard', loadUser);
-app.get('/adminMonetaryDonationDashboard', loadDoacao);
-
-// Helper para capturar erros em async handlers
+// 3) Função helper
 function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
-// Rotas de doações
+// ------------------------------------------------------------
+// 4) Rotas principais
+app.use('/user', userRoutes);
 app.post('/api/doacoes/dinheiro', asyncHandler(registerDonation));
 app.post('/api/doacoes/roupas', asyncHandler(registerClothesDonation));
 app.post('/api/doacoes/alimentos', asyncHandler(registerFoodDonation));
-
-// Rota de testes de BD ou outras
 app.use('/test', testDB);
 
-// Se quiser, adicione uma rota raiz para verificar que o servidor está vivo:
+// ✅ ROTAS DE GRÁFICO (AGORA FUNCIONAM!)
+app.get('/api/graficos/doacoes/dinheiro', asyncHandler(graficoDinheiro));
+app.get('/api/graficos/doacoes/roupas', asyncHandler(graficoRoupas));
+app.get('/api/graficos/doacoes/alimentos', asyncHandler(graficoAlimentos));
+
+// ------------------------------------------------------------
+// 5) Rota raiz
 app.get('/', (req: Request, res: Response) => {
   res.json({ status: 'Servidor rodando' });
 });
 
 // ------------------------------------------------------------
-// 4) Tratamento de rotas não encontradas (404)
+// 6) Erros
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-// ------------------------------------------------------------
-// 5) Error handler em JSON
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('💥 Erro não capturado:', err);
-  // Se headers já foram enviados, delega
-  if (res.headersSent) {
-    return next(err);
-  }
-  const statusCode = err.status || 500;
-  res.status(statusCode).json({
+  if (res.headersSent) return next(err);
+  res.status(err.status || 500).json({
     success: false,
     error: err.message || 'Internal server error',
   });
 });
 
 // ------------------------------------------------------------
-// 6) Start
+// 7) Inicia servidor
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, () => {
   console.log(`🔥 Servidor rodando em http://localhost:${PORT}`);
