@@ -24,7 +24,7 @@ try {
     },
     max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 20000,
   });
 
   // Testa a conexão inicial com o banco de dados (opcional, mas útil)
