@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const requiredEnvVars = ['PGHOST', 'PGUSER', 'DB_PASSWORD', 'DB_NAME'];
+const requiredEnvVars = ['DB_url'];
 
 for (const varName of requiredEnvVars) {
   if (!process.env[varName]) {
