@@ -9,7 +9,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 interface DoacaoDinheiro {
   id: number;
-  valor: number; // Garantir que é número
+  valor: number;
   metodo: string;
   data_doacao: string;
 }
@@ -17,7 +17,7 @@ interface DoacaoDinheiro {
 interface DoacaoRoupa {
   id: number;
   descricao: string;
-  quantidade: number; // Garantir que é número
+  quantidade: number;
   tamanho?: string;
   data_doacao: string;
 }
@@ -25,7 +25,7 @@ interface DoacaoRoupa {
 interface DoacaoAlimento {
   id: number;
   descricao: string;
-  quantidade_kg: number; // Garantir que é número
+  quantidade_kg: number;
   data_doacao: string;
 }
 
@@ -51,28 +51,19 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        navigate('/registro');
-        return;
-      }
-
       const res = await fetch('http://localhost:5000/user/profile', {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include',
       });
 
       if (res.status === 401) {
-        localStorage.removeItem('authToken');
         navigate('/registro');
         return;
       }
@@ -83,25 +74,23 @@ const Profile: React.FC = () => {
       }
 
       const data = await res.json();
-      
-      // Converter valores para números
-      const convertDoacoes = (doacoes: any[], valueField: string) => {
-        return doacoes.map(d => ({
-          ...d,
-          [valueField]: typeof d[valueField] === 'string' ? 
-                        parseFloat(d[valueField]) : d[valueField]
-        }));
-      };
 
-      setProfile({
-        ...data,
-        doacoesDinheiro: data.doacoesDinheiro ? 
-                         convertDoacoes(data.doacoesDinheiro, 'valor') : [],
-        doacoesRoupa: data.doacoesRoupa ? 
-                     convertDoacoes(data.doacoesRoupa, 'quantidade') : [],
-        doacoesAlimento: data.doacoesAlimento ? 
-                        convertDoacoes(data.doacoesAlimento, 'quantidade_kg') : []
-      });
+      // Conversões numéricas seguras
+      if (data.doacoesDinheiro) {
+        data.doacoesDinheiro = data.doacoesDinheiro.map((d: any) => ({
+          ...d,
+          valor: typeof d.valor === 'string' ? parseFloat(d.valor) : d.valor
+        }));
+      }
+
+      if (data.doacoesAlimento) {
+        data.doacoesAlimento = data.doacoesAlimento.map((d: any) => ({
+          ...d,
+          quantidade_kg: typeof d.quantidade_kg === 'string' ? parseFloat(d.quantidade_kg) : d.quantidade_kg
+        }));
+      }
+
+      setProfile(data);
 
     } catch (err: any) {
       console.error('Erro ao buscar perfil:', err);
@@ -112,12 +101,6 @@ const Profile: React.FC = () => {
   };
 
   const handleDeleteAccount = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/registro');
-      return;
-    }
-
     const { value: password } = await Swal.fire({
       title: 'Confirmar exclusão de conta',
       text: 'Esta ação é irreversível! Digite sua senha para confirmar:',
@@ -141,8 +124,8 @@ const Profile: React.FC = () => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
           },
+          credentials: 'include',
           body: JSON.stringify({ senha: password })
         });
 
@@ -151,8 +134,6 @@ const Profile: React.FC = () => {
           throw new Error(errorData.error || 'Erro ao excluir conta');
         }
 
-        localStorage.removeItem('authToken');
-        
         await Swal.fire({
           title: 'Conta excluída!',
           text: 'Sua conta foi excluída com sucesso.',
@@ -173,11 +154,6 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/');
-  };
-
   if (loading) {
     return (
       <div className="loading-container">
@@ -192,113 +168,114 @@ const Profile: React.FC = () => {
       <div className="error-container">
         <h2>Erro ao carregar perfil</h2>
         <p>{error}</p>
-        <button onClick={fetchProfile}>Tentar novamente</button>
+        <button onClick={() => window.location.reload()}>Tentar novamente</button>
       </div>
     );
+  }
+
+  function handleLogout(): void {
+    // Implementar lógica de logout, por exemplo:
+    fetch('http://localhost:5000/user/logout', {
+      method: 'POST',
+      credentials: 'include',
+    }).then(() => {
+      navigate('/');
+    });
   }
 
   return (
     <div className={`profile-page ${theme}`}>
       <Navbar />
       <header className="profile-header">
-        <div className="header-content">
-          <div className="profile-info">
-            <div className="user-details">
-              {profile?.user ? (
-                <>
-                  <h1>{profile.user.nome}</h1>
-                  <p>Telefone: {profile.user.telefone}</p>
-                  <p>Membro desde: {profile.user.data_cadastro}</p>
-                </>
-              ) : (
-                <p>Dados do usuário não encontrados</p>
-              )}
+      <div className="header-content">
+        <div className="profile-info">
+        <div className="user-details">
+          {profile?.user ? (
+          <>
+            <h1>{profile.user.nome}</h1>
+            <p>Telefone: {profile.user.telefone}</p>
+            <p>Membro desde: {profile.user.data_cadastro}</p>
+          </>
+          ) : (
+          <p>Dados do usuário não encontrados</p>
+          )}
 
-              <div className="theme-selector">
-                <label htmlFor="theme-toggle">Modo Escuro:</label>
-                <button 
-                  id="theme-toggle"
-                  className="theme-toggle"
-                  onClick={toggleTheme}
-                  aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
-                >
-                  <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
-                    <div className="switch-handle"></div>
-                  </div>
-                  <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
-                </button>
-              </div>
-
-              <div className="logout-section">
-                <button
-                  className="logout-btn"
-                  onClick={handleLogout}
-                >
-                  Sair da Conta
-                </button>
-              </div>
-
-              <div className="delete-account-section">
-                <button 
-                  className="delete-account-btn"
-                  onClick={handleDeleteAccount}
-                >
-                  Excluir Minha Conta
-                </button>
-              </div>
+          <div className="theme-selector">
+          <label htmlFor="theme-toggle">Modo Escuro:</label>
+          <button 
+            id="theme-toggle"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
+          >
+            <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
+            <div className="switch-handle"></div>
             </div>
+            <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
+          </button>
+          </div>
+          
+          <div className="delete-account-section">
+          <button 
+            className="delete-account-btn"
+            onClick={handleDeleteAccount}
+          >
+            Excluir Minha Conta
+          </button>
           </div>
         </div>
+        </div>
+      </div>
       </header>
 
       <main className="profile-content">
         <section className="donations-section">
           <h2>Minhas Doações</h2>
 
-          {profile?.doacoesDinheiro && profile.doacoesDinheiro.length > 0 && (
-            <div className="donation-type">
+          {(profile?.doacoesDinheiro?.length ?? 0) > 0 && (
+            <>
               <h3>Doações em Dinheiro</h3>
               <ul>
-                {profile.doacoesDinheiro.map(d => (
+                {(profile?.doacoesDinheiro ?? []).map(d => (
                   <li key={`d-${d.id}`}>
                     <strong>R$ {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}
-                  </li> 
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {profile?.doacoesRoupa && profile.doacoesRoupa.length > 0 && (
-            <div className="donation-type">
-              <h3>Doações de Roupas</h3>
-              <ul>
-                {profile.doacoesRoupa.map(d => (
-                  <li key={`r-${d.id}`}>
-                    {d.quantidade}x {d.descricao} {d.tamanho && `(tamanho ${d.tamanho})`} em {d.data_doacao}
                   </li>
                 ))}
               </ul>
-            </div>
+            </>
           )}
 
-          {profile?.doacoesAlimento && profile.doacoesAlimento.length > 0 && (
-            <div className="donation-type">
+          {(profile?.doacoesRoupa?.length ?? 0) > 0 && (
+            <>
+              <h3>Doações de Roupas</h3>
+              <ul>
+                {(profile?.doacoesRoupa ?? []).map(d => (
+                  <li key={`r-${d.id}`}>
+                    {d.quantidade}x {d.descricao} (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {(profile?.doacoesAlimento?.length ?? 0) > 0 && (
+            <>
               <h3>Doações de Alimentos</h3>
               <ul>
-                {profile.doacoesAlimento.map(d => (
+                {(profile?.doacoesAlimento ?? []).map(d => (
                   <li key={`a-${d.id}`}>
                     {d.quantidade_kg.toFixed(2)} kg de {d.descricao} em {d.data_doacao}
                   </li>
                 ))}
               </ul>
-            </div>
+            </>
           )}
 
-          {(!profile || 
-            (profile.doacoesDinheiro.length === 0 && 
-             profile.doacoesRoupa.length === 0 && 
-             profile.doacoesAlimento.length === 0)) && (
-            <p>Você ainda não fez nenhuma doação.</p>
+          {profile &&
+            profile.doacoesDinheiro.length === 0 &&
+            profile.doacoesRoupa.length === 0 &&
+            profile.doacoesAlimento.length === 0 && (
+              <p>Você ainda não fez nenhuma doação.</p>
           )}
         </section>
       </main>

@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+:root {
+  --admin-bg: #ffffff;
+  --admin-text: #333333;
+  --admin-accent: rgba(255, 0, 0, 0.85);
+  --admin-accent-hover: rgba(200, 0, 0, 0.85);
+  --admin-section-bg: #f8f9fa;
+  --admin-card-bg: #ffffff;
+  --admin-border: #dddddd;
+}
+
+[data-theme='dark'] {
+  --admin-bg: #1a1a1a;
+  --admin-text: #e0e0e0;
+  --admin-accent: rgba(150, 0, 0, 0.85);
+  --admin-accent-hover: rgba(100, 0, 0, 0.85);
+  --admin-section-bg: #222222;
+  --admin-card-bg: #1e1e1e;
+  --admin-border: #444444;
+}
+
+body {
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: 'Poppins', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Página */
+.admin-page {
+  padding: 2rem 1rem;
+  background-color: var(--admin-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.admin-page h2 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: var(--admin-accent);
+}
+
+.admin-chart-title {
+  font-size: 1.5rem;
+  text-align: center;
+  margin: 0 auto;
+  color: var(--admin-accent);
+}
+
+/* Layout seções */
+.admin-chart-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding: 1rem 0;
+}
+
+.admin-chart-container {
+  flex: 1 1 500px;
+  min-width: 320px;
+  max-width: 700px;
+  background-color: var(--admin-card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
+  border: 1px solid var(--admin-border);
+}
+
+.admin-chart-container:hover {
+  transform: translateY(-3px);
+}
+
+.admin-chart-container h6 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.admin-chart-container ul {
+  padding-left: 1rem;
+}
+
+.admin-chart-container li {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  list-style-type: disc;
+}
+
+/* Filtro compacto */
+.admin-chart-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtro-select {
+  min-width: 200px;
+  font-size: 0.95rem;
+  z-index: 10;
+}
+
+/* Tooltip (recharts) */
+.recharts-tooltip-wrapper {
+  z-index: 1000;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .admin-page h2 {
+    font-size: 2rem;
+  }
+
+  .admin-chart-title {
+    font-size: 1.4rem;
+  }
+
+  .admin-chart-container {
+    padding: 1rem;
+  }
+
+  .admin-chart-container h6 {
+    font-size: 1rem;
+  }
+
+  .admin-chart-container li {
+    font-size: 0.95rem;
+  }
+}

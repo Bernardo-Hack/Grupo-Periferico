@@ -1,220 +1,224 @@
-import React, { useEffect } from 'react';
-import { initMDB, Tab, Input, Ripple } from 'mdb-ui-kit';
-import { Navbar } from '../../layouts/shared/navbar';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import '../../layouts/style/user_registerCSS.css';
-import Swal from 'sweetalert2';
-import 'sweetalert2/dist/sweetalert2.min.css';
+// src/frontend/pages/Admin.tsx
+import { useEffect, useState } from 'react';
+import Select from 'react-select';
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+import '../../layouts/style/adminCharts.css';
 
-const Login: React.FC = () => {
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#D62728', '#A569BD', '#48C9B0'];
+
+type Dinheiro = { metodo_pagamento: string; total: number };
+type Roupa = { tipo: string; total: number };
+type Alimento = { tipo: string; total: number };
+
+const Admin = () => {
+  const [dinheiro, setDinheiro] = useState<Dinheiro[]>([]);
+  const [roupas, setRoupas] = useState<Roupa[]>([]);
+  const [roupasFiltradas, setRoupasFiltradas] = useState<Roupa[]>([]);
+  const [alimentos, setAlimentos] = useState<Alimento[]>([]);
+  const [alimentosFiltrados, setAlimentosFiltrados] = useState<Alimento[]>([]);
+  const [totalDinheiro, setTotalDinheiro] = useState(0);
+  const [filtroDinheiro, setFiltroDinheiro] = useState('todos');
+  const [filtroAlimento, setFiltroAlimento] = useState('todos');
+  const [mostrarRoupasDeFrio, setMostrarRoupasDeFrio] = useState(false);
+
+  const roupasDeFrio = ['Calça', 'Jaqueta', 'Moletom', 'Blusa', 'Cachecol', 'Gorro', 'Casaco'];
+
+  const fetchData = () => {
+    const queryDinheiro = filtroDinheiro !== 'todos' ? `?periodo=${filtroDinheiro}` : '';
+    const queryAlimento = filtroAlimento !== 'todos' ? `?periodo=${filtroAlimento}` : '';
+
+    fetch(`http://localhost:5000/api/graficos/doacoes/dinheiro${queryDinheiro}`)
+      .then(res => res.ok ? res.json() : Promise.reject(res))
+      .then(data => {
+        const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
+        setDinheiro(formatted);
+        const total = formatted.reduce((acc, cur) => acc + cur.total, 0);
+        setTotalDinheiro(total);
+      });
+
+    fetch('http://localhost:5000/api/graficos/doacoes/roupas')
+      .then(res => res.ok ? res.json() : Promise.reject(res))
+      .then(data => {
+        const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
+        setRoupas(formatted);
+      });
+
+    fetch(`http://localhost:5000/api/graficos/doacoes/alimentos${queryAlimento}`)
+      .then(res => res.ok ? res.json() : Promise.reject(res))
+      .then(data => {
+        const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
+        setAlimentos(formatted);
+        setAlimentosFiltrados(formatted);
+      });
+  };
+
   useEffect(() => {
-    try {
-      initMDB({ Tab, Input, Ripple });
-    } catch (error) {
-      console.error('Erro ao inicializar o MDB UI Kit:', error);
-    }
-  }, []);
+    fetchData();
+  }, [filtroDinheiro, filtroAlimento]);
 
-  const validarCPF = (cpf: string) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/.test(cpf);
-  const validarTelefone = (telefone: string) => /^\(?\d{2}\)?[\s-]?\d{4,5}-?\d{4}$/.test(telefone);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const nome = (document.getElementById('loginName') as HTMLInputElement)?.value;
-    const senha = (document.getElementById('loginPassword') as HTMLInputElement)?.value;
-
-    if (!nome || !senha) {
-      return Swal.fire('Erro', 'Preencha nome e senha.', 'error');
-    }
-
-    const res = await fetch('http://localhost:5000/user/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ nome, senha }),
-    });
-
-    const json = await res.json();
-    if (json.ok) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Login bem-sucedido!',
-        timer: 2000,
-        showConfirmButton: false,
-      }).then(() => {
-        window.location.href = '/perfil';
-      });
+  useEffect(() => {
+    if (mostrarRoupasDeFrio) {
+      const filtradas = roupas.filter(item =>
+        roupasDeFrio.includes(item.tipo.toLowerCase().replace(/^\w/, c => c.toUpperCase()))
+      );
+      setRoupasFiltradas(filtradas);
     } else {
-      Swal.fire('Erro', json.error || 'Nome ou senha inválidos.', 'error');
+      setRoupasFiltradas(roupas);
     }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const nome = (document.getElementById('registerName') as HTMLInputElement)?.value;
-    const cpf = (document.getElementById('registerCpf') as HTMLInputElement)?.value;
-    const telefone = (document.getElementById('registerTelefone') as HTMLInputElement)?.value;
-    const dt_nasc = (document.getElementById('registerNascimento') as HTMLInputElement)?.value;
-    const senha = (document.getElementById('registerPassword') as HTMLInputElement)?.value;
-
-    if (!nome || !cpf || !telefone || !dt_nasc || !senha) {
-      return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
-    }
-
-    if (!validarCPF(cpf)) {
-      return Swal.fire('Erro', 'CPF inválido.', 'error');
-    }
-
-    if (!validarTelefone(telefone)) {
-      return Swal.fire('Erro', 'Telefone inválido.', 'error');
-    }
-
-    const res = await fetch('http://localhost:5000/user/reg_user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ nome, cpf, telefone, dt_nasc, senha }),
-    });
-
-    const json = await res.json();
-    if (json.ok) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Usuário cadastrado com sucesso!',
-        timer: 2000,
-        showConfirmButton: false,
-      }).then(() => {
-        window.location.reload();
-      });
-    } else {
-      Swal.fire('Erro', json.error || 'Erro ao cadastrar.', 'error');
-    }
-  };
+  }, [roupas, mostrarRoupasDeFrio]);
 
   return (
-    <div className="login-page-wrapper d-flex flex-column min-vh-100">
-      <Navbar />
-      <div className="d-flex flex-grow-1 align-items-center justify-content-center">
-        <div className="login-register-container">
-          {/* Abas de navegação */}
-          <ul className="nav nav-pills nav-justified mb-3" id="ex1" role="tablist">
-            <li className="nav-item" role="presentation">
-              <a
-                className="nav-link active"
-                id="tab-login"
-                data-mdb-pill-init
-                href="#pills-login"
-                role="tab"
-                aria-controls="pills-login"
-                aria-selected="true"
-              >
-                Login
-              </a>
-            </li>
-            <li className="nav-item" role="presentation">
-              <a
-                className="nav-link"
-                id="tab-register"
-                data-mdb-pill-init
-                href="#pills-register"
-                role="tab"
-                aria-controls="pills-register"
-                aria-selected="false"
-              >
-                Cadastro
-              </a>
-            </li>
-          </ul>
+    <div className="admin-page">
+      <h2>Painel de Doações</h2>
 
-          {/* Conteúdo das abas */}
-          <div className="tab-content">
-            {/* Aba de login */}
-            <div
-              className="tab-pane fade show active"
-              id="pills-login"
-              role="tabpanel"
-              aria-labelledby="tab-login"
-            >
-              <form onSubmit={handleLogin}>
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="text" id="loginName" className="form-control" />
-                  <label className="form-label" htmlFor="loginName">Nome de usuário</label>
-                </div>
-
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="password" id="loginPassword" className="form-control" />
-                  <label className="form-label" htmlFor="loginPassword">Senha</label>
-                </div>
-
-                <div className="row mb-4">
-                  <div className="col-md-6 d-flex justify-content-center">
-                    <div className="form-check mb-3 mb-md-0">
-                      <input className="form-check-input" type="checkbox" value="" id="loginCheck" defaultChecked />
-                      <label className="form-check-label" htmlFor="loginCheck">Lembrar de mim</label>
-                    </div>
-                  </div>
-                  <div className="col-md-6 d-flex justify-content-center">
-                    <a href="#!">Esqueceu a senha?</a>
-                  </div>
-                </div>
-
-                <button type="submit" className="btn btn-primary btn-block mb-4">Entrar</button>
-
-              </form>
-            </div>
-
-            {/* Aba de cadastro */}
-            <div
-              className="tab-pane fade"
-              id="pills-register"
-              role="tabpanel"
-              aria-labelledby="tab-register"
-            >
-              <form className="register-form" onSubmit={handleRegister}>
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="text" id="registerName" className="form-control" />
-                  <label className="form-label" htmlFor="registerName">Nome completo</label>
-                </div>
-
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="text" id="registerCpf" className="form-control" />
-                  <label className="form-label" htmlFor="registerCpf">CPF</label>
-                </div>
-
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="text" id="registerTelefone" className="form-control" />
-                  <label className="form-label" htmlFor="registerTelefone">Telefone</label>
-                </div>
-
-                <div className="form-outline mb-4">
-                  <input
-                    type="date"
-                    id="registerNascimento"
-                    className="form-control active"
-                    placeholder=" "
-                  />
-                  <label className="form-label" htmlFor="registerNascimento">Data de nascimento</label>
-                </div>
-
-                <div data-mdb-input-init className="form-outline mb-4">
-                  <input type="password" id="registerPassword" className="form-control" />
-                  <label className="form-label" htmlFor="registerPassword">Senha</label>
-                </div>
-
-                <div className="form-check d-flex justify-content-center mb-4">
-                  <input className="form-check-input me-2" type="checkbox" value="" id="registerCheck" defaultChecked />
-                  <label className="form-check-label" htmlFor="registerCheck">Eu li e concordo com os termos</label>
-                </div>
-
-                <button type="submit" className="btn btn-primary btn-block mb-3">Cadastrar</button>
-              </form>
-            </div>
+      {/* Dinheiro */}
+      <div className="admin-chart-section">
+        <div className="admin-chart-container">
+          <div className="admin-chart-header">
+            <Select
+              className="filtro-select"
+              options={[
+                { value: 'todos', label: 'Todas' },
+                { value: '7dias', label: 'Últimos 7 dias' },
+                { value: '30dias', label: 'Últimos 30 dias' },
+                { value: 'ano', label: 'Este ano' }
+              ]}
+              defaultValue={{ value: 'todos', label: 'Todas' }}
+              onChange={(e) => setFiltroDinheiro(e?.value || 'todos')}
+            />
+            <h4 className="admin-chart-title">Doações em Dinheiro (Total: R$ {totalDinheiro.toFixed(2)})</h4>
           </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={dinheiro}
+                dataKey="total"
+                nameKey="metodo_pagamento"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              >
+                {dinheiro.map((_, index) => (
+                  <Cell key={`cell-din-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+              <Legend layout="horizontal" verticalAlign="bottom" />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="admin-chart-container">
+          <h6>Resumo:</h6>
+          <ul>
+            {dinheiro.map((item, index) => (
+              <li key={index} style={{ color: COLORS[index % COLORS.length] }}>
+                {item.metodo_pagamento}: R$ {item.total.toFixed(2)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Roupas */}
+      <div className="admin-chart-section">
+        <div className="admin-chart-container">
+          <div className="admin-chart-header">
+            <Select
+              className="filtro-select"
+              options={[
+                { value: 'todas', label: 'Todas' },
+                { value: 'frio', label: 'Apenas roupas de frio' }
+              ]}
+              defaultValue={{ value: 'todas', label: 'Todas' }}
+              onChange={(e) => setMostrarRoupasDeFrio(e?.value === 'frio')}
+            />
+            <h4 className="admin-chart-title">Doações de Roupas</h4>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={roupasFiltradas}
+                dataKey="total"
+                nameKey="tipo"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              >
+                {roupasFiltradas.map((_, index) => (
+                  <Cell key={`cell-rp-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend layout="horizontal" verticalAlign="bottom" />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="admin-chart-container">
+          <h6>Resumo:</h6>
+          <ul>
+            {roupasFiltradas.map((item, index) => (
+              <li key={index} style={{ color: COLORS[index % COLORS.length] }}>
+                {item.tipo}: {item.total} unidades
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Alimentos */}
+      <div className="admin-chart-section">
+        <div className="admin-chart-container">
+          <div className="admin-chart-header">
+            <Select
+              className="filtro-select"
+              options={[
+                { value: 'todos', label: 'Todas' },
+                { value: '7dias', label: 'Últimos 7 dias' },
+                { value: '30dias', label: 'Últimos 30 dias' },
+                { value: 'ano', label: 'Este ano' }
+              ]}
+              defaultValue={{ value: 'todos', label: 'Todas' }}
+              onChange={(e) => setFiltroAlimento(e?.value || 'todos')}
+            />
+            <h4 className="admin-chart-title">Doações de Alimentos (kg)</h4>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={alimentosFiltrados}
+                dataKey="total"
+                nameKey="tipo"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              >
+                {alimentosFiltrados.map((_, index) => (
+                  <Cell key={`cell-al-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend layout="horizontal" verticalAlign="bottom" />
+            </PieChart>
+        </ResponsiveContainer>
+        </div>
+        <div className="admin-chart-container">
+          <h6>Resumo:</h6>
+          <ul>
+            {alimentosFiltrados.map((item, index) => (
+              <li key={index} style={{ color: COLORS[index % COLORS.length] }}>
+                {item.tipo}: {item.total} kg
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default Admin;
