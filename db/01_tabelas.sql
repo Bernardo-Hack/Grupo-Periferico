@@ -62,15 +62,6 @@ CREATE TABLE IF NOT EXISTS DoacaoAlimento (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
--- Tabela de certificados
-CREATE TABLE Certificado (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
-    distribuicao_id INT NOT NULL,
-    data_emissao DATE NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
-    FOREIGN KEY (distribuicao_id) REFERENCES Distribuicao(id)
-);
 
 CREATE TABLE voluntario (
     id_voluntario INT AUTO_INCREMENT PRIMARY KEY,
