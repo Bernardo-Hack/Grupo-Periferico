@@ -49,6 +49,7 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const apiUrl = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem('jwtToken');
 
   useEffect(() => {
     fetchProfile();
@@ -59,11 +60,21 @@ const Profile: React.FC = () => {
       setLoading(true);
       setError(null);
 
+      if (!token) {
+        navigate('/registro');
+        return;
+      }
+
       const res = await fetch(`${apiUrl}/user/profile`, {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Formato padrão
+        }
       });
 
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 403) { // Se o token for inválido/expirado
+        localStorage.removeItem('jwtToken'); // Limpa o token inválido
         navigate('/registro');
         return;
       }
@@ -124,6 +135,7 @@ const Profile: React.FC = () => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // Formato padrão
           },
           body: JSON.stringify({ senha: password })
         });

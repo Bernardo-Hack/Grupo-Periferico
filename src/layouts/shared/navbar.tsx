@@ -12,24 +12,25 @@ import '../style/navbarCSS.css';
 
 export const Navbar = () => {
   const [expanded, setExpanded] = useState(false);
-  const navigate = useNavigate(); // usar para redirecionar após logout
+  const navigate = useNavigate(); // Usar para redirecionar após logout
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+
     fetch(`${apiUrl}/user/logout`, {
       method: 'POST',
-      credentials: 'include',
     })
       .then(res => {
         if (res.ok) {
-          navigate('/login'); // redireciona para login
+          navigate('/registro'); // Redireciona para login
         } else {
           alert('Erro ao sair da conta.');
         }
       })
       .catch(err => {
         console.error('Erro no logout:', err);
-        alert('Erro de conexão ao sair da conta.');
+        navigate('/registro'); // Garante o redirecionamento
       });
   };
 

@@ -38,11 +38,13 @@ const Login: React.FC = () => {
 
     const json = await res.json();
 
-    if (res.status === 200) {
+    if (res.status === 200 && json.token) {
+      localStorage.setItem('jwtToken', json.token);
+
       Swal.fire({
         icon: 'success',
         title: 'Login bem-sucedido!',
-        timer: 2000,
+        timer: 1500,
         showConfirmButton: false,
       }).then(() => {
         navigate('/perfil');
@@ -85,7 +87,7 @@ const Login: React.FC = () => {
       Swal.fire({
         icon: 'success',
         title: 'Usuário cadastrado com sucesso!',
-        timer: 2000,
+        timer: 1500,
         showConfirmButton: false,
       }).then(() => {
         navigate('/registro');
