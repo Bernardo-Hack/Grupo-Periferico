@@ -1,3 +1,4 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect, FC, ReactNode, useRef } from 'react';
 import { ThemeProvider } from '../src/contexts/ThemeContext';
@@ -5,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 import Adm from './pages/adm/admin';
+import AdminLogin from './pages/adm/adminLogin'; // <-- Importação do novo login
 import Home from './pages/home';
 import Monetary from './pages/donations/monetary';
 import Clothes from './pages/donations/clothes';
@@ -14,8 +16,6 @@ import Immigrant from './pages/user/immigrant';
 import Voluntary from './pages/user/voluntary';
 import Profile from './pages/user/profile';
 
-
-// Tipos globais para widget do Google Translate
 declare global {
   interface Window {
     google?: {
@@ -24,7 +24,6 @@ declare global {
           options: { pageLanguage: string; includedLanguages: string; layout: number },
           elementId: string
         ) => void;
-        TranslateElementInit?: () => void;
         InlineLayout?: { SIMPLE: number };
       };
     };
@@ -32,7 +31,6 @@ declare global {
   }
 }
 
-// Componente de Tradução Automática
 const GoogleTranslateWidget: FC = () => {
   const observerRef = useRef<MutationObserver | null>(null);
 
@@ -42,7 +40,11 @@ const GoogleTranslateWidget: FC = () => {
     const initGoogleTranslate = () => {
       if (!window.google?.translate) return;
       new window.google.translate.TranslateElement(
-        { pageLanguage: 'pt', includedLanguages: 'en,es,fr,de,it,pt', layout: window.google.translate.InlineLayout?.SIMPLE || 0 },
+        {
+          pageLanguage: 'pt',
+          includedLanguages: 'en,es,fr,de,it,pt',
+          layout: window.google.translate.InlineLayout?.SIMPLE || 0,
+        },
         'google_translate_element'
       );
       const style = document.createElement('style');
@@ -80,7 +82,6 @@ const GoogleTranslateWidget: FC = () => {
   );
 };
 
-// Layout principal
 const MainLayout: FC<{ children: ReactNode }> = ({ children }) => (
   <div className="app-container">
     <GoogleTranslateWidget />
@@ -88,11 +89,9 @@ const MainLayout: FC<{ children: ReactNode }> = ({ children }) => (
   </div>
 );
 
-// App com BrowserRouter
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Adicione o ThemeProvider aqui envolvendo todo o conteúdo */}
       <ThemeProvider>
         <MainLayout>
           <Routes>
@@ -105,6 +104,7 @@ export default function App() {
             <Route path="/imigrantes" element={<Immigrant />} />
             <Route path="/voluntarios" element={<Voluntary />} />
             <Route path="/admin" element={<Adm />} />
+            <Route path="/login-admin" element={<AdminLogin />} /> {/* <- AQUI */}
             <Route path="*" element={<Home />} />
           </Routes>
         </MainLayout>

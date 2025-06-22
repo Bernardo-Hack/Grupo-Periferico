@@ -24,7 +24,7 @@
     "src/**/*",
     "tests/**/*",
     "jest.config.ts"
-  ],
+, "generateHash.ts"  ],
   "exclude": [
     "node_modules",
     "dist"
