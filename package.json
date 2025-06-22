@@ -26,7 +26,6 @@
     "@types/react-router-dom": "^5.3.3",
     "backend": "file:",
     "bcrypt": "^5.1.1",
-    "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.6",
     "core-js": "^3.23.3",
     "cors": "^2.8.5",
@@ -34,10 +33,8 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
-    "glob": "^9.0.0",
     "jsonwebtoken": "^9.0.2",
     "mdb-ui-kit": "^9.0.0",
-    "mdbreact": "^4.6.1",
     "nodemon": "^3.1.10",
     "periferico": "file:",
     "pg": "^8.16.0",
@@ -47,13 +44,10 @@
     "react-router-dom": "^6.22.3",
     "react-select": "^5.10.1",
     "recharts": "^2.15.3",
-    "reflect-metadata": "^0.2.2",
-    "sweetalert2": "^11.21.1",
-    "typeorm": "^0.3.23"
+    "sweetalert2": "^11.21.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
-    "@types/bcryptjs": "^2.4.6",
     "@types/bootstrap": "^5.2.10",
     "@types/express": "^5.0.1",
     "@types/express-session": "^1.18.1",
