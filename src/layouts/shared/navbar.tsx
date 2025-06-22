@@ -13,9 +13,10 @@ import '../style/navbarCSS.css';
 export const Navbar = () => {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate(); // usar para redirecionar após logout
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const handleLogout = () => {
-    fetch('http://localhost:5000/user/logout', {
+    fetch(`${apiUrl}/user/logout`, {
       method: 'POST',
       credentials: 'include',
     })

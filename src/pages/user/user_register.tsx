@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { initMDB, Tab, Input, Ripple } from 'mdb-ui-kit';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import '../../layouts/style/user_registerCSS.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '../../layouts/style/user_registerCSS.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const Login: React.FC = () => {
   useEffect(() => {
@@ -18,6 +19,7 @@ const Login: React.FC = () => {
   const validarCPF = (cpf: string) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/.test(cpf);
   const validarTelefone = (telefone: string) => /^\(?\d{2}\)?[\s-]?\d{4,5}-?\d{4}$/.test(telefone);
   const apiUrl = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,14 +37,15 @@ const Login: React.FC = () => {
     });
 
     const json = await res.json();
-    if (json.ok) {
+
+    if (res.status === 200) {
       Swal.fire({
         icon: 'success',
         title: 'Login bem-sucedido!',
         timer: 2000,
         showConfirmButton: false,
       }).then(() => {
-        window.location.href = '/perfil';
+        navigate('/perfil');
       });
     } else {
       Swal.fire('Erro', json.error || 'Nome ou senha inválidos.', 'error');
@@ -77,14 +80,15 @@ const Login: React.FC = () => {
     });
 
     const json = await res.json();
-    if (json.ok) {
+
+    if (res.status === 201) {
       Swal.fire({
         icon: 'success',
         title: 'Usuário cadastrado com sucesso!',
         timer: 2000,
         showConfirmButton: false,
       }).then(() => {
-        window.location.reload();
+        navigate('/registro');
       });
     } else {
       Swal.fire('Erro', json.error || 'Erro ao cadastrar.', 'error');

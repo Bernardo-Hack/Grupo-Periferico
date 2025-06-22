@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
 import { useTheme } from '../../contexts/ThemeContext';
-import '../../layouts/style/profileCSS.css';
-import '../../layouts/style/globalCSS.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '../../layouts/style/profileCSS.css';
+import '../../layouts/style/globalCSS.css';
 
 interface DoacaoDinheiro {
   id: number;
@@ -48,6 +48,7 @@ const Profile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchProfile();
@@ -58,9 +59,8 @@ const Profile: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const res = await fetch('http://localhost:5000/user/profile', {
+      const res = await fetch(`${apiUrl}/user/profile`, {
         method: 'GET',
-        credentials: 'include',
       });
 
       if (res.status === 401) {
@@ -120,12 +120,11 @@ const Profile: React.FC = () => {
 
     if (password) {
       try {
-        const res = await fetch('http://localhost:5000/user/delete', {
+        const res = await fetch(`${apiUrl}/user/delete`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
           body: JSON.stringify({ senha: password })
         });
 
@@ -171,16 +170,6 @@ const Profile: React.FC = () => {
         <button onClick={() => window.location.reload()}>Tentar novamente</button>
       </div>
     );
-  }
-
-  function handleLogout(): void {
-    // Implementar lógica de logout, por exemplo:
-    fetch('http://localhost:5000/user/logout', {
-      method: 'POST',
-      credentials: 'include',
-    }).then(() => {
-      navigate('/');
-    });
   }
 
   return (
