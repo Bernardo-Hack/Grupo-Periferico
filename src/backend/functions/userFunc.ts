@@ -1,6 +1,5 @@
+// src/backend/functions/userFunc.ts
 import { Router, Request, Response, NextFunction } from 'express';
-// Verifique se o caminho para seu arquivo jwt.ts está correto.
-// Se a pasta for 'auth', o caminho seria '../auth/jwt'
 import { gerarTokenJWT, verificarToken, AuthRequest } from '../utils/jwt'; 
 import { hashPassword, comparePassword } from '../utils/encrypt';
 import pool from '../config/db';
@@ -62,7 +61,7 @@ router.post(
       return;
     }
 
-    const payload = { id: user.id, nome: user.nome };
+    const payload = { id: user.id, nome: user.nome, role: 'user' };
     const token = gerarTokenJWT(payload);
 
     res.status(200).json({ token: token });

@@ -21,6 +21,7 @@ if (!JWT_SECRET) {
 interface JWTPayload {
   id: number;
   nome: string;
+  role: string; // Exemplo de campo adicional, como 'admin', 'user', etc.
   // Você pode adicionar outros campos não sensíveis aqui, como 'role', 'email', etc.
 }
 
