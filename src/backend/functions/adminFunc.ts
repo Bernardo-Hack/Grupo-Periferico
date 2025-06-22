@@ -2,6 +2,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import db from '../config/db';
 import { comparePassword } from '../utils/encrypt';
+import { verificarAdmin, verificarToken } from '../utils/jwt';
 
 const router = Router();
 
@@ -88,7 +89,7 @@ export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
 
 // ========== ROTAS PROTEGIDAS ==========
 
-router.get('/admin/dashboard', adminAuth, loadUser);
+router.get('/admin/dashboard',verificarToken, verificarAdmin,(req,res)=>{res.json({message: 'bem vindo'})});
 router.get('/admin/doacoes', adminAuth, loadDoacao);
 
 export default router;

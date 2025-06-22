@@ -62,7 +62,7 @@ router.post(
       return;
     }
 
-    const payload = { id: user.id, nome: user.nome };
+    const payload = { id: user.id, nome: user.nome , role:'user'};
     const token = gerarTokenJWT(payload);
 
     res.status(200).json({ token: token });

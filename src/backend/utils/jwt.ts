@@ -21,13 +21,9 @@ if (!JWT_SECRET) {
 interface JWTPayload {
   id: number;
   nome: string;
-  // Você pode adicionar outros campos não sensíveis aqui, como 'role', 'email', etc.
+  role: string;
 }
 
-/**
- * Estende a interface padrão do Request do Express para incluir
- * a propriedade 'usuario', que será adicionada pelo nosso middleware.
- */
 export interface AuthRequest extends Request {
   usuario?: JWTPayload;
 }
@@ -53,12 +49,16 @@ export const gerarTokenJWT = (payload: JWTPayload): string => {
 
 
 // --- 3. MIDDLEWARE PARA VERIFICAR O TOKEN ---
+export const verificarAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
 
-/**
- * Middleware para Express que verifica a validade do token JWT
- * enviado no cabeçalho 'Authorization' de uma requisição.
- */
-// ... (código anterior)
+  if (req.usuario && req.usuario.role === 'admin') {
+    next(); // Se for admin, permite que a requisição continue.
+  } else {
+    // Se não for admin, retorna um erro de 'Acesso Proibido'.
+    res.status(403).json({ error: 'Acesso negado. Requer permissão de administrador.' });
+  }
+};  
+
 
 export function verificarToken(req: AuthRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization'];
