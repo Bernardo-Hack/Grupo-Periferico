@@ -57,7 +57,6 @@ app.use(cors(corsOptions));
 app.use('/user', userRoutes);
 
 app.use('/admin', adminRoutes);
-app.post('/admin/check-token', adminRoutes);
 
 function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
   return (req: Request, res: Response, next: NextFunction) => {

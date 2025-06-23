@@ -34,7 +34,7 @@ const AdminDashboard = () => {
   // Verifica se o admin está logado
   useEffect(() => {
     fetch(`${apiUrl}/admin/check-token`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` // Formato padrão
