@@ -21,6 +21,7 @@ const Clothes: React.FC = () => {
     const donationType = (document.getElementById('donationType') as HTMLInputElement)?.value;
     const donationQuantity = (document.getElementById('donationQuantity') as HTMLInputElement)?.value;
     const donationSize = (document.getElementById('donationSize') as HTMLInputElement)?.value;
+    const description = (document.getElementById('donationDescription') as HTMLInputElement)?.value;
 
     if (!donationName || !donationEmail || !donationType || !donationQuantity || !donationSize) {
       return Swal.fire('Erro', 'Preencha todos os campos.', 'error');
@@ -60,7 +61,8 @@ const Clothes: React.FC = () => {
           email: donationEmail,
           quantidade: donationQuantity,
           tipo: donationType,
-          tamanho: donationSize
+          tamanho: donationSize,
+          descrição: description,
         })
       });
 
@@ -184,6 +186,14 @@ const Clothes: React.FC = () => {
                 name="donationQuantity"
                 min="1"
               />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="descricao">Descrição (opcional)</label>
+              <textarea
+                id="donationDescription"
+                name="donationDescription"
+                placeholder="Descreva as condições das roupas, marcas, etc."
+              ></textarea>
             </div>
 
             <div className="form-group">
