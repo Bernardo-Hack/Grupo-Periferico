@@ -4,12 +4,12 @@ dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import userRoutes from './functions/userFunc';
-import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
-import { loadUser, loadDoacao } from './functions/adminFunc';
-import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
-import testDB from './functions/testDB';
 import swaggerUi from 'swagger-ui-express';
+import userRoutes from './functions/userFunc.js';
+import { verificarToken } from './utils/jwt.js'; // ALTERAÇÃO: Importe o middleware
+import { loadUser, loadDoacao } from './functions/adminFunc.js';
+import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc.js';
+import testDB from './functions/testDB.js';
 import swaggerDocument from './utils/swagger.json';
 
 const app = express();
