@@ -69,14 +69,11 @@ const fetchData = async () => {
       'Authorization': `Bearer ${token}`
     };
 
-    const queryDinheiro = filtroDinheiro !== 'todos' ? `?periodo=${filtroDinheiro}` : '';
-    const queryAlimento = filtroAlimento !== 'todos' ? `?periodo=${filtroAlimento}` : '';
-
     // Dispara todas as requisições em paralelo e espera todas terminarem
     const responses = await Promise.all([
-      fetch(`${apiUrl}/api/graficos/doacoes/dinheiro${queryDinheiro}`, { method: 'GET', headers }),
+      fetch(`${apiUrl}/api/graficos/doacoes/dinheiro`, { method: 'GET', headers }),
       fetch(`${apiUrl}/api/graficos/doacoes/roupas`, { method: 'GET', headers }),
-      fetch(`${apiUrl}/api/graficos/doacoes/alimentos${queryAlimento}`, { method: 'GET', headers })
+      fetch(`${apiUrl}/api/graficos/doacoes/alimentos`, { method: 'GET', headers })
     ]);
 
     // Verifica se alguma das respostas falhou
