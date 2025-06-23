@@ -8,7 +8,7 @@ import '../../layouts/style/donations_global.css';
 const Clothes: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme(); // Obtenha o tema atual
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.VITE_API_URL;
   const token = localStorage.getItem('jwtToken');
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);

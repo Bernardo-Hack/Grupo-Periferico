@@ -2,7 +2,7 @@
   "compilerOptions": {
     "resolveJsonModule": true,
     "target": "ES2020",
-    "module": "ESNEXT",
+    "module": "commonjs",
     "jsx": "react-jsx",
     "outDir": "./dist",
     "rootDir": ".", 

@@ -18,7 +18,7 @@ const Login: React.FC = () => {
 
   const validarCPF = (cpf: string) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/.test(cpf);
   const validarTelefone = (telefone: string) => /^\(?\d{2}\)?[\s-]?\d{4,5}-?\d{4}$/.test(telefone);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.VITE_API_URL;
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {

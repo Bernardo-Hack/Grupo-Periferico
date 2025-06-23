@@ -52,7 +52,7 @@ const Profile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.VITE_API_URL;
   const token = localStorage.getItem('jwtToken');
 
   useEffect(() => {

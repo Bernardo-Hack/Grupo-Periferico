@@ -10,7 +10,7 @@ const Monetary: React.FC = () => {
   const [valor, setValor] = useState<string>(''); // string para input, converteremos antes de enviar
   const [metodoPagamento, setMetodoPagamento] = useState('');
   const [loading, setLoading] = useState(false);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.VITE_API_URL;
   const token = localStorage.getItem('jwtToken');
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
