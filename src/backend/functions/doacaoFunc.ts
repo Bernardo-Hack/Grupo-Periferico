@@ -1,6 +1,7 @@
 // src/backend/functions/doacaoFunc.ts
-import { Request, Response, NextFunction } from 'express';
-import db from '../config/db';
+import { Response, NextFunction } from 'express';
+import { AuthRequest } from '../utils/jwt'; // Importe a interface AuthRequest
+import pool from '../config/db';
 
 /**
  * Converte de forma segura um valor que pode vir como string ou number em número ou retorna null se inválido.
@@ -23,23 +24,22 @@ function parseNumber(value: any): number | null {
  * Tabela: doacaodinheiro
  * Colunas: id, usuario_id, nome_doador, valor, data_doacao (default NOW), metodo_pagamento
  */
-export const registerDonation = async (req: Request, res: Response, next: NextFunction) => {
+export const registerDonation = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     console.log('registerDonation - req.body:', req.body);
-    const userId = req.session?.userId;
+    const userId = req.usuario?.id;
     // Exigir login: se não tiver userId, retorna 401
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Usuário não autenticado. Faça login antes de doar.',
+        message: 'ID do usuário não encontrado no token. Acesso não autorizado.',
       });
     }
 
     // Esperamos receber do frontend:
     //   valor: number|string (valor da doação)
     //   metodo_pagamento: 'pix' | 'cartao' | 'boleto'
-    const valorRaw = req.body.valor;
-    const metodo_pagamento = req.body.metodo_pagamento as string;
+    const { valor: valorRaw, metodo_pagamento } = req.body;
     const valor = parseNumber(valorRaw);
 
     // Validações:
@@ -68,14 +68,8 @@ export const registerDonation = async (req: Request, res: Response, next: NextFu
       INSERT INTO DoacaoDinheiro (usuario_id, valor, metodo_pagamento)
       VALUES ($1, $2, $3)
     `;
-    console.log(
-      'Executando INSERT em doacaodinheiro:',
-      insertSQL,
-      'valores:',
-      [userId, valor, metodo_pagamento]
-    );
-    await db.query(insertSQL, [userId, valor, metodo_pagamento]);
-    console.log('Doação de dinheiro registrada com sucesso.');
+
+    await pool.query(insertSQL, [userId, valor, metodo_pagamento]);
 
     return res.status(201).json({
       success: true,
@@ -84,6 +78,7 @@ export const registerDonation = async (req: Request, res: Response, next: NextFu
     });
   } catch (err) {
     console.error('Erro ao registrar doação em dinheiro:', err);
+
     return res.status(500).json({
       success: false,
       message: (err instanceof Error ? err.message : 'Erro ao registrar doação.'),
@@ -97,15 +92,15 @@ export const registerDonation = async (req: Request, res: Response, next: NextFu
  * Colunas: id, usuario_id, tipo, quantidade, tamanho, data_doacao
  * Não há nome_doador/email; assumimos que o usuário identificado pela sessão é quem doa.
  */
-export const registerClothesDonation = async (req: Request, res: Response, next: NextFunction) => {
+export const registerClothesDonation = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     console.log('registerClothesDonation - req.body:', req.body);
-    const userId = req.session?.userId;
+    const userId = req.usuario?.id;
     // Exigir login:
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Usuário não autenticado. Faça login antes de doar roupas.',
+        message: 'ID do usuário não encontrado no token. Acesso não autorizado.',
       });
     }
 
@@ -113,10 +108,10 @@ export const registerClothesDonation = async (req: Request, res: Response, next:
     //   tipo: string (descrição/tipo da roupa)
     //   quantidade: number|string (quantidade de peças)
     //   tamanho: string|null (opcional, ex: 'P','M','G','GG')
-    const { tipo, tamanho } = req.body;
-    const quantidadeRaw = req.body.quantidade;
-    const quantidade = parseNumber(quantidadeRaw);
 
+    const { tipo, tamanho, quantidade: quantidadeRaw } = req.body;
+    const quantidade = parseNumber(quantidadeRaw);
+    
     // Validações:
     if (!tipo || quantidade === null) {
       return res.status(400).json({
@@ -130,22 +125,12 @@ export const registerClothesDonation = async (req: Request, res: Response, next:
         message: 'Quantidade deve ser um número positivo.',
       });
     }
-    // Se quiser validar tamanho (opcional), por exemplo permitir só certas opções:
-    // const tamanhosValidos = ['P','M','G','GG'];
-    // if (tamanho && !tamanhosValidos.includes(tamanho)) { ... }
 
     const insertSQL = `
       INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao)
       VALUES ($1, $2, $3, $4, NOW())
     `;
-    console.log(
-      'Executando INSERT em DoacaoRoupa:',
-      insertSQL,
-      'valores:',
-      [userId, tipo, quantidade, tamanho || null]
-    );
-    await db.query(insertSQL, [userId, tipo, quantidade, tamanho || null]);
-    console.log('Doação de roupa registrada com sucesso.');
+    await pool.query(insertSQL, [userId, tipo, quantidade, tamanho || null]);
 
     return res.status(201).json({
       success: true,
@@ -167,23 +152,22 @@ export const registerClothesDonation = async (req: Request, res: Response, next:
  * Colunas: id, usuario_id, tipo, quantidade_kg, data_doacao
  * Não há nome_doador/email; assumimos que a sessão identifica o doador.
  */
-export const registerFoodDonation = async (req: Request, res: Response, next: NextFunction) => {
+export const registerFoodDonation = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     console.log('registerFoodDonation - req.body:', req.body);
-    const userId = req.session?.userId;
+    const userId = req.usuario?.id;
     // Exigir login:
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Usuário não autenticado. Faça login antes de doar alimentos.',
+        message: 'ID do usuário não encontrado no token. Acesso não autorizado.',
       });
     }
 
     // Esperamos receber do frontend:
     //   tipo: string (descrição do alimento, ex: 'Arroz')
     //   quantidade: number|string (quantidade em kg)
-    const { tipo } = req.body;
-    const quantidadeRaw = req.body.quantidade;
+    const { tipo, quantidade: quantidadeRaw } = req.body;
     const quantidade = parseNumber(quantidadeRaw);
 
     // Validações:
@@ -204,14 +188,7 @@ export const registerFoodDonation = async (req: Request, res: Response, next: Ne
       INSERT INTO DoacaoAlimento (usuario_id, tipo, quantidade_kg, data_doacao)
       VALUES ($1, $2, $3, NOW())
     `;
-    console.log(
-      'Executando INSERT em DoacaoAlimento:',
-      insertSQL,
-      'valores:',
-      [userId, tipo, quantidade]
-    );
-    await db.query(insertSQL, [userId, tipo, quantidade]);
-    console.log('Doação de alimento registrada com sucesso.');
+    await pool.query(insertSQL, [userId, tipo, quantidade]);
 
     return res.status(201).json({
       success: true,

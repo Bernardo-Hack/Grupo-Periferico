@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
-import '../../layouts/style/donations_global.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '../../layouts/style/donations_global.css';
 
 const Monetary: React.FC = () => {
   const [nome, setNome] = useState('');
@@ -10,6 +10,8 @@ const Monetary: React.FC = () => {
   const [valor, setValor] = useState<string>(''); // string para input, converteremos antes de enviar
   const [metodoPagamento, setMetodoPagamento] = useState('');
   const [loading, setLoading] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem('jwtToken');
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
@@ -41,12 +43,12 @@ const Monetary: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/doacoes/dinheiro', {
+      const res = await fetch(`${apiUrl}/api/doacoes/dinheiro`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Formato padrão
         },
-        credentials: 'include',
         body: JSON.stringify({
           nome,
           email,
@@ -54,35 +56,38 @@ const Monetary: React.FC = () => {
           metodo_pagamento: metodoPagamento,
         }),
       });
-      const json = await res.json();
-      console.log('Monetary - Resposta da API:', json);
 
-      if (!res.ok) {
+      const json = await res.json();
+      console.log('Resposta da API:', json);
+
+      if (res.status === 400 || res.status === 401) {
         throw new Error(json.message || 'Erro ao processar doação');
       }
-      if (json.redirectUrl) {
-        window.location.href = json.redirectUrl;
-      } else {
+
+      if (res.status === 201) {
         await Swal.fire({
           icon: 'success',
           title: 'Doação realizada com sucesso!',
           text: 'Obrigado por sua contribuição!',
           confirmButtonColor: '#3085d6',
-          timer: 3000,
+          timer: 1500,
           timerProgressBar: true,
           willClose: () => {
             window.location.href = '/doacao/sucesso';
           }
         });
       }
+      
     } catch (err) {
-      console.error('Monetary - Erro na doação (frontend):', err);
+      console.error('Erro na doação (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
         text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
+      console.error('Erro na doação:', err);
+      
     } finally {
       setLoading(false);
     }
@@ -103,6 +108,24 @@ const Monetary: React.FC = () => {
           src="src\assets\images\photo-1740592910131-b604d790061a.avif"
           alt="Doação de Alimentos"
         />
+      </section>
+
+      <section>
+       <div className="info-item">
+          <i className="fas fa-hand-holding-usd icon"></i>
+          <h3>Impacto Direto</h3>
+          <p>Seu apoio financeiro transforma vidas com mais agilidade e precisão.</p>
+        </div>
+        <div className="info-item">
+          <i className="fas fa-donate icon"></i>
+          <h3>Transparência e Confiança</h3>
+          <p>Suas contribuições são registradas, geridas com responsabilidade e bem direcionadas.</p>
+        </div>
+        <div className="info-item">
+          <i className="fas fa-piggy-bank icon"></i>
+          <h3>Futuro Sustentável</h3>
+          <p>Investir no presente é garantir um amanhã com mais dignidade para todos.</p>
+        </div>
       </section>
 
       <section className="donation-form-section">

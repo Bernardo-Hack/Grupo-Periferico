@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Navbar } from '../../layouts/shared/navbar';
 import { Footer } from '../../layouts/shared/footer';
-import '../../layouts/style/donations_global.css';
+import { useTheme } from '../../contexts/ThemeContext'; 
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
-import { useTheme } from '../../contexts/ThemeContext'; 
+import '../../layouts/style/donations_global.css';
 
 const Foods: React.FC = () => {
   const [nome, setNome] = useState('');
@@ -13,6 +13,8 @@ const Foods: React.FC = () => {
   const [quantidade, setQuantidade] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme(); // Obtenha o tema atual
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem('jwtToken');
 
   const validarEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
@@ -36,12 +38,12 @@ const Foods: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/doacoes/alimentos', {
+      const res = await fetch(`${apiUrl}/api/doacoes/roupa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Formato padrão
         },
-        credentials: 'include',
         body: JSON.stringify({
           nome,
           email,
@@ -49,22 +51,21 @@ const Foods: React.FC = () => {
           quantidade: quantidadeNum,
         }),
       });
+
       const json = await res.json();
       console.log('Resposta da API:', json);
 
-      if (!res.ok) {
+      if (res.status === 400 || res.status === 401) {
         throw new Error(json.message || 'Erro ao processar doação');
       }
 
-      if (json.redirectUrl) {
-        window.location.href = json.redirectUrl;
-      } else {
+      if (res.status === 201) {
         await Swal.fire({
           icon: 'success',
           title: 'Doação realizada com sucesso!',
           text: 'Obrigado por sua contribuição!',
           confirmButtonColor: '#3085d6',
-          timer: 3000,
+          timer: 1500,
           timerProgressBar: true,
           willClose: () => {
             window.location.href = '/doacao/sucesso';
@@ -79,6 +80,8 @@ const Foods: React.FC = () => {
         text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
         confirmButtonColor: '#3085d6'
       });
+      console.error('Erro na doação:', err);
+      
     } finally {
       setLoading(false);
     }
