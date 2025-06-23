@@ -62,7 +62,7 @@ const Clothes: React.FC = () => {
           quantidade: donationQuantity,
           tipo: donationType,
           tamanho: donationSize,
-          descrição: description,
+          descricao: description,
         })
       });
 
