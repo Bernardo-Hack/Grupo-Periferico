@@ -22,25 +22,40 @@ const AdminDashboard = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Estados para guardar os dados completos vindos da API
   const [dinheiro, setDinheiro] = useState<Dinheiro[]>([]);
   const [roupas, setRoupas] = useState<Roupa[]>([]);
-  const [roupasFiltradas, setRoupasFiltradas] = useState<Roupa[]>([]);
   const [alimentos, setAlimentos] = useState<Alimento[]>([]);
-  const [alimentosFiltrados, setAlimentosFiltrados] = useState<Alimento[]>([]);
-  const [totalDinheiro, setTotalDinheiro] = useState(0);
-  const [filtroDinheiro, setFiltroDinheiro] = useState('todos');
-  const [filtroAlimento, setFiltroAlimento] = useState('todos');
-  const [mostrarRoupasDeFrio, setMostrarRoupasDeFrio] = useState(false);
 
+  // Estados para guardar os dados que serão exibidos nos gráficos (já filtrados)
+  const [dinheiroFiltrado, setDinheiroFiltrado] = useState<Dinheiro[]>([]);
+  const [roupasFiltradas, setRoupasFiltradas] = useState<Roupa[]>([]);
+  const [alimentosFiltrados, setAlimentosFiltrados] = useState<Alimento[]>([]);
+
+  // Estados para controlar o valor selecionado em cada filtro
+  const [filtroTipoDinheiro, setFiltroTipoDinheiro] = useState('todos');
+  const [filtroTipoRoupa, setFiltroTipoRoupa] = useState('todas');
+  const [filtroTipoAlimento, setFiltroTipoAlimento] = useState('todos');
+
+  const [totalDinheiro, setTotalDinheiro] = useState(0);
+
+  // Definições para as categorias de filtros
   const roupasDeFrio = ['Calça', 'Jaqueta', 'Moletom', 'Blusa', 'Cachecol', 'Gorro', 'Casaco'];
+  const pagamentosOnline = ['pix', 'cartao'];
+  const alimentosNaoPereciveis = ['Arroz', 'Feijão', 'Macarrão', 'Farinha', 'Açúcar', 'Óleo', 'Enlatados'];
 
   // Verifica se o admin está logado
   useEffect(() => {
+    if (!token) {
+      navigate('/admin/login');
+      return;
+    }
+    
     fetch(`${apiUrl}/admin/check-token`, {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Formato padrão
+          'Authorization': `Bearer ${token}`
         },
     })
       .then(res => {
@@ -49,78 +64,90 @@ const AdminDashboard = () => {
           navigate('/admin/login');
           throw new Error('Sessão expirada ou inválida.');
         }
-
         setIsLoading(false);
         return res.json();
       })
       .catch(() => {
-        navigate('/login-admin');
+        navigate('/admin/login');
       });
-  }, [navigate]);
-  
-const fetchData = async () => {
-  setIsFetching(true);
-  setFetchError(null); // Limpa erros anteriores
+  }, [navigate, apiUrl, token]);
 
-  try {
-    const token = localStorage.getItem('jwtToken');
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
+  // Função para buscar os dados iniciais da API
+  const fetchData = async () => {
+    setIsFetching(true);
+    setFetchError(null);
 
-    // Dispara todas as requisições em paralelo e espera todas terminarem
-    const responses = await Promise.all([
-      fetch(`${apiUrl}/api/graficos/doacoes/dinheiro`, { method: 'GET', headers }),
-      fetch(`${apiUrl}/api/graficos/doacoes/roupas`, { method: 'GET', headers }),
-      fetch(`${apiUrl}/api/graficos/doacoes/alimentos`, { method: 'GET', headers })
-    ]);
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
 
-    // Verifica se alguma das respostas falhou
-    const failedResponse = responses.find(res => !res.ok);
-    if (failedResponse) {
-      throw new Error(`Erro ao buscar dados: ${failedResponse.statusText}`);
+      const responses = await Promise.all([
+        fetch(`${apiUrl}/api/graficos/doacoes/dinheiro`, { headers }),
+        fetch(`${apiUrl}/api/graficos/doacoes/roupas`, { headers }),
+        fetch(`${apiUrl}/api/graficos/doacoes/alimentos`, { headers })
+      ]);
+
+      const failedResponse = responses.find(res => !res.ok);
+      if (failedResponse) throw new Error(`Erro ao buscar dados: ${failedResponse.statusText}`);
+
+      const [dinheiroData, roupasData, alimentosData] = await Promise.all(responses.map(res => res.json()));
+
+      const formattedDinheiro = dinheiroData.map((item: any) => ({ ...item, total: Number(item.total) }));
+      setDinheiro(formattedDinheiro);
+      setDinheiroFiltrado(formattedDinheiro); // Inicia com todos os dados
+      setTotalDinheiro(formattedDinheiro.reduce((acc: number, cur: Dinheiro) => acc + cur.total, 0));
+
+      const formattedRoupas = roupasData.map((item: any) => ({ ...item, total: Number(item.total) }));
+      setRoupas(formattedRoupas);
+      setRoupasFiltradas(formattedRoupas); // Inicia com todos os dados
+
+      const formattedAlimentos = alimentosData.map((item: any) => ({ ...item, total: Number(item.total) }));
+      setAlimentos(formattedAlimentos);
+      setAlimentosFiltrados(formattedAlimentos); // Inicia com todos os dados
+
+    } catch (error: any) {
+      console.error("Erro ao buscar dados dos gráficos:", error);
+      setFetchError(error.message || 'Não foi possível carregar os dados.');
+    } finally {
+      setIsFetching(false);
     }
+  };
 
-    // Extrai o JSON de todas as respostas
-    const [dinheiroData, roupasData, alimentosData] = await Promise.all(
-      responses.map(res => res.json())
-    );
-
-    // Atualiza os estados de uma só vez, após ter todos os dados
-    const formattedDinheiro = dinheiroData.map((item: any) => ({ ...item, total: Number(item.total) }));
-    setDinheiro(formattedDinheiro);
-    setTotalDinheiro(formattedDinheiro.reduce((acc: number, cur: Dinheiro) => acc + cur.total, 0));
-
-    const formattedRoupas = roupasData.map((item: any) => ({ ...item, total: Number(item.total) }));
-    setRoupas(formattedRoupas);
-
-    const formattedAlimentos = alimentosData.map((item: any) => ({ ...item, total: Number(item.total) }));
-    setAlimentos(formattedAlimentos);
-    setAlimentosFiltrados(formattedAlimentos);
-
-  } catch (error: any) {
-    console.error("Erro ao buscar dados dos gráficos:", error);
-    setFetchError(error.message || 'Não foi possível carregar os dados.');
-  } finally {
-    setIsFetching(false); // Garante que o estado de "carregando" termine, mesmo com erro
-  }
-};
-
+  // Efeito para buscar os dados apenas uma vez, quando o componente não está mais carregando
   useEffect(() => {
-    if (!isLoading) fetchData();
-  }, [filtroDinheiro, filtroAlimento, isLoading]);
+    if (!isLoading) {
+      fetchData();
+    }
+  }, [isLoading]);
 
+  // Efeito para filtrar as doações em DINHEIRO
   useEffect(() => {
-    if (mostrarRoupasDeFrio) {
-      const filtradas = roupas.filter(item =>
-        roupasDeFrio.includes(item.tipo.toLowerCase().replace(/^\w/, c => c.toUpperCase()))
-      );
+    if (filtroTipoDinheiro === 'online') {
+      const filtrados = dinheiro.filter(item => pagamentosOnline.includes(item.metodo_pagamento));
+      setDinheiroFiltrado(filtrados);
+    } else {
+      setDinheiroFiltrado(dinheiro); // 'todos'
+    }
+  }, [dinheiro, filtroTipoDinheiro]);
+  
+  // Efeito para filtrar as doações de ROUPAS
+  useEffect(() => {
+    if (filtroTipoRoupa === 'frio') {
+      const filtradas = roupas.filter(item => roupasDeFrio.includes(item.tipo));
       setRoupasFiltradas(filtradas);
     } else {
-      setRoupasFiltradas(roupas);
+      setRoupasFiltradas(roupas); // 'todas'
     }
-  }, [roupas, mostrarRoupasDeFrio]);
+  }, [roupas, filtroTipoRoupa]);
+
+  // Efeito para filtrar as doações de ALIMENTOS
+  useEffect(() => {
+    if (filtroTipoAlimento === 'nao-perecivel') {
+      const filtrados = alimentos.filter(item => alimentosNaoPereciveis.includes(item.tipo));
+      setAlimentosFiltrados(filtrados);
+    } else {
+      setAlimentosFiltrados(alimentos); // 'todos'
+    }
+  }, [alimentos, filtroTipoAlimento]);
 
   if (isLoading) {
     return <div className="text-center mt-5">Carregando...</div>;
@@ -133,11 +160,7 @@ const fetchData = async () => {
         <div className="text-center mt-5" style={{ color: 'red' }}>
           <h3>Ocorreu um erro ao carregar o painel</h3>
           <p>{fetchError}</p>
-          <button
-            onClick={fetchData}
-            disabled={isFetching}
-            className="btn btn-primary"
-          >
+          <button onClick={fetchData} disabled={isFetching} className="btn btn-primary">
             {isFetching ? 'Tentando...' : 'Tentar Novamente'}
           </button>
         </div>
@@ -148,8 +171,7 @@ const fetchData = async () => {
   return (
     <div className="admin-page">
       <Navbar />
-      <br />
-      <br />
+      <br /><br />
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
         <h2>Painel de Doações</h2>
         {isFetching && <p style={{ margin: 0, color: 'gray' }}>Atualizando...</p>}
@@ -163,19 +185,17 @@ const fetchData = async () => {
               className="filtro-select"
               options={[
                 { value: 'todos', label: 'Todas' },
-                { value: '7dias', label: 'Últimos 7 dias' },
-                { value: '30dias', label: 'Últimos 30 dias' },
-                { value: 'ano', label: 'Este ano' }
+                { value: 'online', label: 'Apenas pagamentos online' }
               ]}
               defaultValue={{ value: 'todos', label: 'Todas' }}
-              onChange={(e) => setFiltroDinheiro(e?.value || 'todos')}
+              onChange={(e) => setFiltroTipoDinheiro(e?.value || 'todos')}
             />
             <h4 className="admin-chart-title">Doações em Dinheiro (Total: R$ {totalDinheiro.toFixed(2)})</h4>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={dinheiro}
+                data={dinheiroFiltrado}
                 dataKey="total"
                 nameKey="metodo_pagamento"
                 cx="50%"
@@ -183,7 +203,7 @@ const fetchData = async () => {
                 outerRadius={100}
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
-                {dinheiro.map((_, index) => (
+                {dinheiroFiltrado.map((_, index) => (
                   <Cell key={`cell-din-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -195,7 +215,7 @@ const fetchData = async () => {
         <div className="admin-chart-container">
           <h6>Resumo:</h6>
           <ul>
-            {dinheiro.map((item, index) => (
+            {dinheiroFiltrado.map((item, index) => (
               <li key={index} style={{ color: COLORS[index % COLORS.length] }}>
                 {item.metodo_pagamento}: R$ {item.total.toFixed(2)}
               </li>
@@ -215,7 +235,7 @@ const fetchData = async () => {
                 { value: 'frio', label: 'Apenas roupas de frio' }
               ]}
               defaultValue={{ value: 'todas', label: 'Todas' }}
-              onChange={(e) => setMostrarRoupasDeFrio(e?.value === 'frio')}
+              onChange={(e) => setFiltroTipoRoupa(e?.value || 'todas')}
             />
             <h4 className="admin-chart-title">Doações de Roupas</h4>
           </div>
@@ -258,13 +278,11 @@ const fetchData = async () => {
             <Select
               className="filtro-select"
               options={[
-                { value: 'todos', label: 'Todas' },
-                { value: '7dias', label: 'Últimos 7 dias' },
-                { value: '30dias', label: 'Últimos 30 dias' },
-                { value: 'ano', label: 'Este ano' }
+                { value: 'todos', label: 'Todos' },
+                { value: 'nao-perecivel', label: 'Apenas não-perecíveis' }
               ]}
-              defaultValue={{ value: 'todos', label: 'Todas' }}
-              onChange={(e) => setFiltroAlimento(e?.value || 'todos')}
+              defaultValue={{ value: 'todos', label: 'Todos' }}
+              onChange={(e) => setFiltroTipoAlimento(e?.value || 'todos')}
             />
             <h4 className="admin-chart-title">Doações de Alimentos (kg)</h4>
           </div>
@@ -283,7 +301,7 @@ const fetchData = async () => {
                   <Cell key={`cell-al-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value: number) => `${value} kg`} />
               <Legend layout="horizontal" verticalAlign="bottom" />
             </PieChart>
           </ResponsiveContainer>
