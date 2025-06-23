@@ -110,8 +110,8 @@ const Monetary: React.FC = () => {
         />
       </section>
 
-      <section>
-       <div className="info-item">
+      <section className="donation-info">
+        <div className="info-item">
           <i className="fas fa-hand-holding-usd icon"></i>
           <h3>Impacto Direto</h3>
           <p>Seu apoio financeiro transforma vidas com mais agilidade e precisão.</p>
