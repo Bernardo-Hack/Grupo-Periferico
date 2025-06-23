@@ -17,7 +17,7 @@ const asyncHandler = (fn: (req: AuthRequest, res: Response, next: NextFunction) 
  * Este middleware DEVE ser usado SEMPRE DEPOIS do middleware 'verificarToken'.
  */
 router.post(
-  'check-token',
+  '/check-token',
   verificarToken,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     // O middleware 'verificarToken' já validou o token e anexou os dados em 'req.usuario'
