@@ -32,7 +32,7 @@ const Voluntary: React.FC = () => {
           email: voluntaryEmail,
           idade: voluntaryAge,
           disponibilidade: voluntaryAviability,
-          experiencia: voluntaryExperience
+          experiencia: voluntaryExperience,
         })
       });
 
@@ -58,14 +58,14 @@ const Voluntary: React.FC = () => {
       }
 
     } catch (err) {
-      console.error('Erro na doação (frontend):', err);
+      console.error('Erro no cadastro (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao processar sua doação',
+        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao cadastrar o voluntário.',
         confirmButtonColor: '#3085d6'
       });
-      console.error('Erro na doação:', err);
+      console.error('Erro no cadastro:', err);
 
     } finally {
       setLoading(false);

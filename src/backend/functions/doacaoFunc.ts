@@ -63,10 +63,12 @@ export const registerDonation = async (req: AuthRequest, res: Response, next: Ne
       });
     }
     const moedasPermitidas = ['BRL', 'USD', 'EUR'];
-    if (!moedasPermitidas.includes(moeda)) {
-      return res.status(400).json({ success: false, message: 'Moeda inválida.' });
+    if (!moeda || !moedasPermitidas.includes(moeda)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Método de pagamento inválido.',
+      });
     }
-    const moedaFinal = moeda;
 
 
     // Monta e executa o INSERT
@@ -75,7 +77,7 @@ export const registerDonation = async (req: AuthRequest, res: Response, next: Ne
       VALUES ($1, $2, $3, $4)
     `;
 
-    await pool.query(insertSQL, [userId, valor, metodo_pagamento, moedaFinal]);
+    await pool.query(insertSQL, [userId, valor, metodo_pagamento, moeda]);
 
 
     return res.status(201).json({
