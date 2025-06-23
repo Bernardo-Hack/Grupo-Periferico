@@ -4,14 +4,14 @@ dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
 import userRoutes from './functions/userFunc';
 import adminRoutes from './functions/adminFunc';
+import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
 import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
+import { graficoDinheiro, graficoRoupas, graficoAlimentos } from './functions/graficosFunc';
 import testDB from './functions/testDB';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './utils/swagger.json';
-import { allowedNodeEnvironmentFlags } from 'node:process';
 
 const app = express();
 
@@ -55,7 +55,6 @@ app.use(cors(corsOptions));
 // ------------------------------------------------------------
 // 3) Rotas
 app.use('/user', userRoutes);
-
 app.use('/admin', adminRoutes);
 
 function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
@@ -64,9 +63,17 @@ function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => P
   };
 }
 
+// Rotas das doações
 app.post('/api/doacoes/dinheiro', verificarToken, asyncHandler(registerDonation));
 app.post('/api/doacoes/roupas', verificarToken, asyncHandler(registerClothesDonation));
 app.post('/api/doacoes/alimentos', verificarToken, asyncHandler(registerFoodDonation));
+
+// Rotas dos gráficos
+app.post('/api/graficos/doacoes/dinheiro', verificarToken, asyncHandler(graficoDinheiro));
+app.post('/api/graficos/doacoes/roupas', verificarToken, asyncHandler(graficoRoupas));
+app.post('/api/graficos/doacoes/alimentos', verificarToken, asyncHandler(graficoAlimentos));
+
+// Rota de teste do banco de dados
 app.use('/test', testDB);
 app.get('/', (req: Request, res: Response) => {
   res.json({ status: 'Servidor rodando' });

@@ -41,7 +41,13 @@ const AdminDashboard = () => {
         },
     })
       .then(res => {
-        if (res.status == 403) throw new Error('Não autorizado');
+        if (!res.ok) {
+          localStorage.removeItem('jwtToken');
+          navigate('/admin/login');
+          throw new Error('Sessão expirada ou inválida.');
+        }
+        
+        setIsLoading(false);
         return res.json();
       })
       .catch(() => {
