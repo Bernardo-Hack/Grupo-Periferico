@@ -1,5 +1,6 @@
-// src/frontend/pages/Admin.tsx
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Navbar } from '../../layouts/shared/navbar';
 import Select from 'react-select';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer
@@ -13,6 +14,9 @@ type Roupa = { tipo: string; total: number };
 type Alimento = { tipo: string; total: number };
 
 const Admin = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
   const [dinheiro, setDinheiro] = useState<Dinheiro[]>([]);
   const [roupas, setRoupas] = useState<Roupa[]>([]);
   const [roupasFiltradas, setRoupasFiltradas] = useState<Roupa[]>([]);
@@ -24,6 +28,25 @@ const Admin = () => {
   const [mostrarRoupasDeFrio, setMostrarRoupasDeFrio] = useState(false);
 
   const roupasDeFrio = ['Calça', 'Jaqueta', 'Moletom', 'Blusa', 'Cachecol', 'Gorro', 'Casaco'];
+
+  // Verifica se o admin está logado
+  useEffect(() => {
+    fetch('http://localhost:5000/adm/check-session', {
+      method: 'GET',
+      credentials: 'include',
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Não autorizado');
+        return res.json();
+      })
+      .then(data => {
+        if (!data.isAdmin) throw new Error('Não autorizado');
+        setIsLoading(false);
+      })
+      .catch(() => {
+        navigate('/admin-login');
+      });
+  }, [navigate]);
 
   const fetchData = () => {
     const queryDinheiro = filtroDinheiro !== 'todos' ? `?periodo=${filtroDinheiro}` : '';
@@ -55,8 +78,8 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [filtroDinheiro, filtroAlimento]);
+    if (!isLoading) fetchData();
+  }, [filtroDinheiro, filtroAlimento, isLoading]);
 
   useEffect(() => {
     if (mostrarRoupasDeFrio) {
@@ -69,11 +92,18 @@ const Admin = () => {
     }
   }, [roupas, mostrarRoupasDeFrio]);
 
+  if (isLoading) {
+    return <div className="text-center mt-5">Carregando...</div>;
+  }
+
   return (
     <div className="admin-page">
+      <Navbar />
+      <br />
+      <br />
       <h2>Painel de Doações</h2>
 
-      {/* Dinheiro */}
+      {/* Gráfico de Dinheiro */}
       <div className="admin-chart-section">
         <div className="admin-chart-container">
           <div className="admin-chart-header">
@@ -122,7 +152,7 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* Roupas */}
+      {/* Gráfico de Roupas */}
       <div className="admin-chart-section">
         <div className="admin-chart-container">
           <div className="admin-chart-header">
@@ -169,7 +199,7 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* Alimentos */}
+      {/* Gráfico de Alimentos */}
       <div className="admin-chart-section">
         <div className="admin-chart-container">
           <div className="admin-chart-header">
@@ -204,7 +234,7 @@ const Admin = () => {
               <Tooltip />
               <Legend layout="horizontal" verticalAlign="bottom" />
             </PieChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
         </div>
         <div className="admin-chart-container">
           <h6>Resumo:</h6>
