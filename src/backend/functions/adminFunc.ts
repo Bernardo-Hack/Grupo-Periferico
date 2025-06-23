@@ -2,7 +2,7 @@
 
 import { Router, Response, NextFunction } from 'express';
 import { comparePassword } from '../utils/encrypt';
-import { gerarTokenJWT, AuthRequest } from '../utils/jwt';
+import { gerarTokenJWT, AuthRequest, verificarToken } from '../utils/jwt';
 import pool from '../config/db';
 
 const router = Router();
@@ -18,6 +18,7 @@ const asyncHandler = (fn: (req: AuthRequest, res: Response, next: NextFunction) 
  */
 router.post(
   'check-token',
+  verificarToken,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     // O middleware 'verificarToken' já validou o token e anexou os dados em 'req.usuario'
     if (req.usuario && req.usuario.role === 'admin') {
@@ -32,7 +33,7 @@ router.post(
   '/login',
   asyncHandler(async (req, res) => {
     const { id, senha } = req.body;
-    if (!senha) {
+    if (!id ||!senha) {
       res.status(400).json({ error: 'Preencha o Id e a senha.' });
       return;
     }
@@ -57,7 +58,7 @@ router.post(
     const payload = { id: admin.id, nome: admin.nome, role: 'admin' };
     const token = gerarTokenJWT(payload);
 
-    res.status(200).json({ token: token });
+    res.status(200).json({ token: token, nome: admin.nome});
   })
 );
 
