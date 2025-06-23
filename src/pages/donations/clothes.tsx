@@ -49,7 +49,7 @@ const Clothes: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/doacoes/roupa`, {
+      const res = await fetch(`${apiUrl}/api/doacoes/roupas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

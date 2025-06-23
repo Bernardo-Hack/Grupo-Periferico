@@ -38,7 +38,7 @@ const Foods: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/doacoes/roupa`, {
+      const res = await fetch(`${apiUrl}/api/doacoes/alimentos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
