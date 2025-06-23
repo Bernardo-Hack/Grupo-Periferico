@@ -15,14 +15,17 @@ export async function graficoDinheiro(req: Request, res: Response) {
     } else if (periodo === 'ano') {
       filtroData = 'WHERE EXTRACT(YEAR FROM data_doacao) = EXTRACT(YEAR FROM CURRENT_DATE)';
     }
-    
-    // A biblioteca 'pg' retorna um objeto com a propriedade 'rows'
-    const { rows } = await pool.query(
-      `SELECT metodo_pagamento, SUM(valor) AS total
+
+    const selectSQL = `
+      SELECT metodo_pagamento, SUM(valor) AS total
       FROM doacaodinheiro
       ${filtroData}
-      GROUP BY metodo_pagamento`
-    );
+      GROUP BY metodo_pagamento
+      `;
+    
+    // A biblioteca 'pg' retorna um objeto com a propriedade 'rows'
+    const { rows } = await pool.query(selectSQL);
+    
     res.json(rows);
   } catch (err) {
     console.error('Erro ao buscar dados do gráfico de dinheiro:', err);

@@ -78,3 +78,27 @@ CREATE TABLE IF NOT EXISTS Certificado (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
     FOREIGN KEY (distribuicao_id) REFERENCES Distribuicao(id)
 );
+
+CREATE TABLE HistoricoDoacoes (
+    id SERIAL PRIMARY KEY,
+    usuario_id INT,
+    tipo_doacao VARCHAR(50) NOT NULL,
+    valor DECIMAL(10, 2), -- Para doações em dinheiro
+    quantidade INT, -- Para doações de roupas ou alimentos
+    data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
+);
+
+CREATE TABLE EstoqueAlimentos (
+    id SERIAL PRIMARY KEY,
+    tipo_alimento VARCHAR(50) UNIQUE NOT NULL,
+    quantidade_kg DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE EstoqueRoupas (
+    id SERIAL PRIMARY KEY,
+    tipo_roupa VARCHAR(50) UNIQUE NOT NULL,
+    quantidade INT NOT NULL DEFAULT 0,
+    ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

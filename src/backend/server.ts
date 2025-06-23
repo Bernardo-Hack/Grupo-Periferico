@@ -69,9 +69,9 @@ app.post('/api/doacoes/roupas', verificarToken, asyncHandler(registerClothesDona
 app.post('/api/doacoes/alimentos', verificarToken, asyncHandler(registerFoodDonation));
 
 // Rotas dos gráficos
-app.post('/api/graficos/doacoes/dinheiro', verificarToken, asyncHandler(graficoDinheiro));
-app.post('/api/graficos/doacoes/roupas', verificarToken, asyncHandler(graficoRoupas));
-app.post('/api/graficos/doacoes/alimentos', verificarToken, asyncHandler(graficoAlimentos));
+app.get('/api/graficos/doacoes/dinheiro', verificarToken, asyncHandler(graficoDinheiro));
+app.get('/api/graficos/doacoes/roupas', verificarToken, asyncHandler(graficoRoupas));
+app.get('/api/graficos/doacoes/alimentos', verificarToken, asyncHandler(graficoAlimentos));
 
 // Rota de teste do banco de dados
 app.use('/test', testDB);

@@ -19,6 +19,9 @@ const AdminDashboard = () => {
   const apiUrl = process.env.VITE_API_URL;
   const token = localStorage.getItem('jwtToken');
 
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const [dinheiro, setDinheiro] = useState<Dinheiro[]>([]);
   const [roupas, setRoupas] = useState<Roupa[]>([]);
   const [roupasFiltradas, setRoupasFiltradas] = useState<Roupa[]>([]);
@@ -46,7 +49,7 @@ const AdminDashboard = () => {
           navigate('/admin/login');
           throw new Error('Sessão expirada ou inválida.');
         }
-        
+
         setIsLoading(false);
         return res.json();
       })
@@ -54,35 +57,58 @@ const AdminDashboard = () => {
         navigate('/login-admin');
       });
   }, [navigate]);
+  
+const fetchData = async () => {
+  setIsFetching(true);
+  setFetchError(null); // Limpa erros anteriores
 
-  const fetchData = () => {
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
     const queryDinheiro = filtroDinheiro !== 'todos' ? `?periodo=${filtroDinheiro}` : '';
     const queryAlimento = filtroAlimento !== 'todos' ? `?periodo=${filtroAlimento}` : '';
 
-    fetch(`${apiUrl}/api/graficos/doacoes/dinheiro${queryDinheiro}`)
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(data => {
-        const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
-        setDinheiro(formatted);
-        const total = formatted.reduce((acc, cur) => acc + cur.total, 0);
-        setTotalDinheiro(total);
-      });
+    // Dispara todas as requisições em paralelo e espera todas terminarem
+    const responses = await Promise.all([
+      fetch(`${apiUrl}/api/graficos/doacoes/dinheiro${queryDinheiro}`, { method: 'GET', headers }),
+      fetch(`${apiUrl}/api/graficos/doacoes/roupas`, { method: 'GET', headers }),
+      fetch(`${apiUrl}/api/graficos/doacoes/alimentos${queryAlimento}`, { method: 'GET', headers })
+    ]);
 
-    fetch(`${apiUrl}/api/graficos/doacoes/roupas`)
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(data => {
-        const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
-        setRoupas(formatted);
-      });
+    // Verifica se alguma das respostas falhou
+    const failedResponse = responses.find(res => !res.ok);
+    if (failedResponse) {
+      throw new Error(`Erro ao buscar dados: ${failedResponse.statusText}`);
+    }
 
-    fetch(`${apiUrl}/api/graficos/doacoes/alimentos${queryAlimento}`)
-      .then(res => res.ok ? res.json() : Promise.reject(res))
-      .then(data => {
-        const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
-        setAlimentos(formatted);
-        setAlimentosFiltrados(formatted);
-      });
-  };
+    // Extrai o JSON de todas as respostas
+    const [dinheiroData, roupasData, alimentosData] = await Promise.all(
+      responses.map(res => res.json())
+    );
+
+    // Atualiza os estados de uma só vez, após ter todos os dados
+    const formattedDinheiro = dinheiroData.map((item: any) => ({ ...item, total: Number(item.total) }));
+    setDinheiro(formattedDinheiro);
+    setTotalDinheiro(formattedDinheiro.reduce((acc: number, cur: Dinheiro) => acc + cur.total, 0));
+
+    const formattedRoupas = roupasData.map((item: any) => ({ ...item, total: Number(item.total) }));
+    setRoupas(formattedRoupas);
+
+    const formattedAlimentos = alimentosData.map((item: any) => ({ ...item, total: Number(item.total) }));
+    setAlimentos(formattedAlimentos);
+    setAlimentosFiltrados(formattedAlimentos);
+
+  } catch (error: any) {
+    console.error("Erro ao buscar dados dos gráficos:", error);
+    setFetchError(error.message || 'Não foi possível carregar os dados.');
+  } finally {
+    setIsFetching(false); // Garante que o estado de "carregando" termine, mesmo com erro
+  }
+};
 
   useEffect(() => {
     if (!isLoading) fetchData();
@@ -103,12 +129,34 @@ const AdminDashboard = () => {
     return <div className="text-center mt-5">Carregando...</div>;
   }
 
+  if (fetchError) {
+    return (
+      <div className="admin-page">
+        <Navbar />
+        <div className="text-center mt-5" style={{ color: 'red' }}>
+          <h3>Ocorreu um erro ao carregar o painel</h3>
+          <p>{fetchError}</p>
+          <button
+            onClick={fetchData}
+            disabled={isFetching}
+            className="btn btn-primary"
+          >
+            {isFetching ? 'Tentando...' : 'Tentar Novamente'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page">
       <Navbar />
       <br />
       <br />
-      <h2>Painel de Doações</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+        <h2>Painel de Doações</h2>
+        {isFetching && <p style={{ margin: 0, color: 'gray' }}>Atualizando...</p>}
+      </div>
 
       {/* Gráfico de Dinheiro */}
       <div className="admin-chart-section">
