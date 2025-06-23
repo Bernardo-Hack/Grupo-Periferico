@@ -16,16 +16,14 @@ interface DoacaoDinheiro {
   moeda?: string; 
 }
 
-// ===== INÍCIO DA CORREÇÃO 1 =====
+
 interface DoacaoRoupa {
   id: number;
-  tipo: string;           // Adicionado o campo 'tipo'
-  descricao?: string;      // 'descricao' agora é opcional
+  descricao: string;
   quantidade: number;
   tamanho?: string;
   data_doacao: string;
 }
-// ===== FIM DA CORREÇÃO 1 =====
 
 interface DoacaoAlimento {
   id: number;
@@ -254,44 +252,28 @@ const Profile: React.FC = () => {
       <main className="profile-content">
         <section className="donations-section">
           <h2>Minhas Doações</h2>
-
           {(profile?.doacoesDinheiro?.length ?? 0) > 0 && (
             <>
               <h3>Doações em Dinheiro</h3>
-                <ul>
-                  {profile?.doacoesDinheiro.map(d => (
-                    <li key={`d-${d.id}`}>
-                      <strong>{(d.moeda || 'BRL')} {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}
-                    </li>
-                  ))}
-                </ul>
-            </>
-          )}
-
-          {/* ===== INÍCIO DA CORREÇÃO 2 ===== */}
-          {(profile?.doacoesRoupa?.length ?? 0) > 0 && (
-            <>
-              <h3>Doações de Roupas</h3>
               <ul>
-                {profile?.doacoesRoupa.map(d => (
-                  <li key={`r-${d.id}`}>
-                    {/* Informação principal agora usa d.tipo */}
-                    <div className="donation-main-info">
-                      {d.quantidade}x <strong>{d.tipo}</strong> (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}
-                    </div>
-
-                    {/* Bloco que só aparece se a descrição existir */}
-                    {d.descricao && (
-                      <div className="donation-description">
-                        Descrição: {d.descricao}
-                      </div>
-                    )}
+                {profile?.doacoesDinheiro.map(d => (
+                  <li key={`d-${d.id}`}>
+                    <strong>{d.moeda} {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}
                   </li>
                 ))}
               </ul>
             </>
           )}
-          {/* ===== FIM DA CORREÇÃO 2 ===== */}
+          {(profile?.doacoesRoupa?.length ?? 0) > 0 && (
+            <>
+              <h3>Doações de Roupas</h3>
+              <ul>
+                {profile?.doacoesRoupa.map(d => (
+                  <li key={`r-${d.id}`}>{d.quantidade}x {d.descricao} (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}</li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {(profile?.doacoesAlimento?.length ?? 0) > 0 && (
             <>
@@ -309,12 +291,12 @@ const Profile: React.FC = () => {
             profile.doacoesRoupa.length === 0 &&
             profile.doacoesAlimento.length === 0 && (
               <p>Você ainda não fez nenhuma doação.</p>
-            )}
+          )}
         </section>
       </main>
 
       <footer className="profile-footer">
-        <p>© 2025 Grupo Periférico. Todos os direitos reservados.</p>
+        <p>©️ 2025 Grupo Periférico. Todos os direitos reservados.</p>
       </footer>
     </div>
   );
