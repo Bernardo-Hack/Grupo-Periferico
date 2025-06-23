@@ -13,7 +13,7 @@ interface DoacaoDinheiro {
   valor: number;
   metodo: string;
   data_doacao: string;
-  moeda?: string; 
+  moeda: string; 
 }
 
 

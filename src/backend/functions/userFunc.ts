@@ -1,6 +1,6 @@
 // src/backend/functions/userFunc.ts
 import { Router, Request, Response, NextFunction } from 'express';
-import { gerarTokenJWT, verificarToken, AuthRequest } from '../utils/jwt'; 
+import { gerarTokenJWT, verificarToken, AuthRequest } from '../utils/jwt';
 import { hashPassword, comparePassword } from '../utils/encrypt';
 import pool from '../config/db';
 
@@ -103,20 +103,20 @@ router.get(
        FROM usuario WHERE id = $1`,
       [userId]
     );
-    
+
     if (userQuery.rows.length === 0) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
-    
+
     const user = userQuery.rows[0];
 
     // Consultas paralelas para melhor performance
     const [dinheiroResult, roupaResult, alimentoResult] = await Promise.all([
       pool.query(
-        `SELECT id, valor, metodo_pagamento AS metodo, 
-                TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
-         FROM DoacaoDinheiro WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
+        `SELECT id, valor, metodo_pagamento AS metodo, moeda,
+              TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
+        FROM DoacaoDinheiro WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
         [userId]
       ),
       pool.query(
@@ -158,7 +158,7 @@ router.delete(
       'SELECT id, senha_hash FROM usuario WHERE id = $1',
       [userId]
     );
-    
+
     if (userRows.length === 0) {
       res.status(404).json({ error: 'Usuário não encontrado' });
       return;

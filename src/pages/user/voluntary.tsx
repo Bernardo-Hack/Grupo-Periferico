@@ -14,7 +14,7 @@ const Voluntary: React.FC = () => {
 
     const voluntaryName = (document.getElementById('nome') as HTMLInputElement)?.value;
     const voluntaryEmail = (document.getElementById('email') as HTMLInputElement)?.value;
-    const voluntaryAge = (document.getElementById('age') as HTMLInputElement)?.value;
+    const voluntaryAge = (document.getElementById('idade') as HTMLInputElement)?.value;
     const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLInputElement)?.value;
     const voluntaryExperience = (document.getElementById('experiencia') as HTMLInputElement)?.value;
 
