@@ -151,14 +151,25 @@ EXECUTE FUNCTION fn_valida_admin_distribuicao();
 CREATE OR REPLACE FUNCTION fn_historico_doacao_dinheiro()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO HistoricoDoacoes (usuario_id, tipo_doacao, valor, data_registro)
-    VALUES (NEW.usuario_id, 'dinheiro', NEW.valor, NOW());
-    
-    RETURN NEW;
+  INSERT INTO HistoricoDoacoes (
+    usuario_id,
+    tipo_doacao,
+    valor,
+    quantidade,
+    data_registro,
+    origem
+  ) VALUES (
+    NEW.usuario_id,
+    'dinheiro',
+    NEW.valor,
+    NULL,
+    CURRENT_TIMESTAMP,
+    'sistema'
+  );
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- 6.B. Trigger que executa a função
 CREATE TRIGGER trg_historico_doacao_dinheiro
 AFTER INSERT ON DoacaoDinheiro
 FOR EACH ROW

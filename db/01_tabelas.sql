@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS Voluntario (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    idade INT NOT NULL CHECK (idade >= 18),
     disponibilidade VARCHAR(255) NOT NULL,
     experiencia TEXT,
     data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
