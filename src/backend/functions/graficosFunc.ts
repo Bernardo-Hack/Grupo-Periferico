@@ -54,7 +54,6 @@ export async function graficoUsuariosAtivos(req: Request, res: Response) {
       SELECT nome, 
              CASE WHEN ativo THEN 'Ativo' ELSE 'Inativo' END AS status
       FROM usuario
-      WHERE admin = FALSE
       ORDER BY nome
     `;
     const { rows } = await pool.query(selectSQL);

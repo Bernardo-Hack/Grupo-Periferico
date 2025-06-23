@@ -39,7 +39,7 @@ export const registerDonation = async (req: AuthRequest, res: Response, next: Ne
     // Esperamos receber do frontend:
     //   valor: number|string (valor da doação)
     //   metodo_pagamento: 'pix' | 'cartao' | 'boleto'
-    const { valor: valorRaw, metodo_pagamento } = req.body;
+    const { valor: valorRaw, metodo_pagamento, moeda } = req.body;
     const valor = parseNumber(valorRaw);
 
     // Validações:
@@ -62,14 +62,18 @@ export const registerDonation = async (req: AuthRequest, res: Response, next: Ne
         message: 'Método de pagamento inválido.',
       });
     }
+    const moedasPermitidas = ['BRL', 'USD', 'EUR'];
+    const moedaFinal = moedasPermitidas.includes(moeda) ? moeda : 'BRL';
+
 
     // Monta e executa o INSERT
     const insertSQL = `
-      INSERT INTO DoacaoDinheiro (usuario_id, valor, metodo_pagamento)
-      VALUES ($1, $2, $3)
+      INSERT INTO DoacaoDinheiro (usuario_id, valor, metodo_pagamento, moeda)
+      VALUES ($1, $2, $3, $4)
     `;
 
-    await pool.query(insertSQL, [userId, valor, metodo_pagamento]);
+    await pool.query(insertSQL, [userId, valor, metodo_pagamento, moedaFinal]);
+
 
     return res.status(201).json({
       success: true,
@@ -109,7 +113,7 @@ export const registerClothesDonation = async (req: AuthRequest, res: Response, n
     //   quantidade: number|string (quantidade de peças)
     //   tamanho: string|null (opcional, ex: 'P','M','G','GG')
 
-    const { tipo, tamanho, quantidade: quantidadeRaw, descricao } = req.body;
+    const { tipo, tamanho, quantidade: quantidadeRaw } = req.body;
     const quantidade = parseNumber(quantidadeRaw);
     
     // Validações:
@@ -127,10 +131,10 @@ export const registerClothesDonation = async (req: AuthRequest, res: Response, n
     }
 
     const insertSQL = `
-      INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao, descricao)
-      VALUES ($1, $2, $3, $4, NOW(), $5)
+      INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao)
+      VALUES ($1, $2, $3, $4, NOW())
     `;
-    await pool.query(insertSQL, [userId, tipo, quantidade, tamanho ,descricao|| null]);
+    await pool.query(insertSQL, [userId, tipo, quantidade, tamanho || null]);
 
     return res.status(201).json({
       success: true,

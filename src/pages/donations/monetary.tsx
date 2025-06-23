@@ -10,6 +10,7 @@ const Monetary: React.FC = () => {
   const [valor, setValor] = useState<string>(''); // string para input, converteremos antes de enviar
   const [metodoPagamento, setMetodoPagamento] = useState('');
   const [loading, setLoading] = useState(false);
+  const [moeda, setMoeda] = useState('BRL'); 
   const apiUrl = process.env.VITE_API_URL;
   const token = localStorage.getItem('jwtToken');
 
@@ -54,6 +55,7 @@ const Monetary: React.FC = () => {
           email,
           valor: valorNum,
           metodo_pagamento: metodoPagamento,
+          moeda,
         }),
       });
 
@@ -184,6 +186,21 @@ const Monetary: React.FC = () => {
               <option value="boleto">Boleto Bancário</option>
             </select>
           </div>
+
+          <div className="form-group">
+            <label htmlFor="donationCurrency">Moeda</label>
+            <select
+              id="donationCurrency"
+              name="donationCurrency"
+              value={moeda}
+              onChange={e => setMoeda(e.target.value)}
+            >
+              <option value="BRL">Real (BRL)</option>
+              <option value="USD">Dólar (USD)</option>
+              <option value="EUR">Euro (EUR)</option>
+            </select>
+          </div>
+
 
           <button
             type="submit"

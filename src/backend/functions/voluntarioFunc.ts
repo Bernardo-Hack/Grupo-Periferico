@@ -32,10 +32,10 @@ export const registerVoluntary = async (req: AuthRequest, res: Response, next: N
     const idade = parseNumber(idadeRaw);
 
     // Validações:
-    if (!nome || !email || !disponibilidade) {
+    if (!nome || !email) {
       return res.status(400).json({
         success: false,
-        message: 'Preencha todos os campos corretamente.',
+        message: 'Preencha nome e idade corretamente.',
       });
     }
     if ( idade === null || idade <= 17) {

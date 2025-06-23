@@ -13,6 +13,7 @@ interface DoacaoDinheiro {
   valor: number;
   metodo: string;
   data_doacao: string;
+  moeda?: string; 
 }
 
 // ===== INÍCIO DA CORREÇÃO 1 =====
@@ -257,11 +258,13 @@ const Profile: React.FC = () => {
           {(profile?.doacoesDinheiro?.length ?? 0) > 0 && (
             <>
               <h3>Doações em Dinheiro</h3>
-              <ul>
-                {profile?.doacoesDinheiro.map(d => (
-                  <li key={`d-${d.id}`}><strong>R$ {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}</li>
-                ))}
-              </ul>
+                <ul>
+                  {profile?.doacoesDinheiro.map(d => (
+                    <li key={`d-${d.id}`}>
+                      <strong>{(d.moeda || 'BRL')} {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}
+                    </li>
+                  ))}
+                </ul>
             </>
           )}
 
