@@ -9,7 +9,7 @@ import adminRoutes from './functions/adminFunc';
 import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
 import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
 import { registerVoluntary } from './functions/voluntarioFunc';
-import { graficoDinheiro, graficoRoupas, graficoAlimentos } from './functions/graficosFunc';
+import { graficoDinheiro, graficoRoupas, graficoAlimentos, graficoUsuariosAtivos } from './functions/graficosFunc';
 import testDB from './functions/testDB';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './utils/swagger.json';
@@ -75,6 +75,8 @@ app.post('/api/doacoes/alimentos', verificarToken, asyncHandler(registerFoodDona
 app.get('/api/graficos/doacoes/dinheiro', verificarToken, asyncHandler(graficoDinheiro));
 app.get('/api/graficos/doacoes/roupas', verificarToken, asyncHandler(graficoRoupas));
 app.get('/api/graficos/doacoes/alimentos', verificarToken, asyncHandler(graficoAlimentos));
+app.get('/api/graficos/usuarios/status', verificarToken, asyncHandler(graficoUsuariosAtivos)); // Rota corrigida
+
 
 // Rota de teste do banco de dados
 app.use('/test', testDB);
