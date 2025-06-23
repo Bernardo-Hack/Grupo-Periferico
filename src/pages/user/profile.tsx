@@ -1,3 +1,4 @@
+// src/pages/Profile.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../layouts/shared/navbar';
@@ -33,6 +34,7 @@ interface UserProfile {
   nome: string;
   telefone: string;
   data_cadastro: string;
+  data_nascimento?: string;
 }
 
 interface ProfileData {
@@ -44,6 +46,8 @@ interface ProfileData {
 
 const Profile: React.FC = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ nome: '', telefone: '', data_nascimento: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -69,12 +73,12 @@ const Profile: React.FC = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Formato padrão
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      if (res.status === 401 || res.status === 403) { // Se o token for inválido/expirado
-        localStorage.removeItem('jwtToken'); // Limpa o token inválido
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('jwtToken');
         navigate('/registro');
         return;
       }
@@ -86,7 +90,6 @@ const Profile: React.FC = () => {
 
       const data = await res.json();
 
-      // Conversões numéricas seguras
       if (data.doacoesDinheiro) {
         data.doacoesDinheiro = data.doacoesDinheiro.map((d: any) => ({
           ...d,
@@ -102,12 +105,41 @@ const Profile: React.FC = () => {
       }
 
       setProfile(data);
+      setEditForm({
+        nome: data.user.nome,
+        telefone: data.user.telefone,
+        data_nascimento: data.user.data_nascimento || ''
+      });
 
     } catch (err: any) {
       console.error('Erro ao buscar perfil:', err);
       setError(err.message || 'Erro ao carregar perfil');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/user/edt_profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editForm)
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Erro ${res.status}: ${errorText}`);
+      }
+
+      Swal.fire('Sucesso', 'Perfil atualizado com sucesso!', 'success');
+      setEditing(false);
+      fetchProfile();
+    } catch (err: any) {
+      Swal.fire('Erro', err.message || 'Erro ao atualizar perfil', 'error');
     }
   };
 
@@ -135,7 +167,7 @@ const Profile: React.FC = () => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // Formato padrão
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({ senha: password })
         });
@@ -166,67 +198,53 @@ const Profile: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Carregando perfil...</p>
-      </div>
-    );
+    return <div className="loading-container"><div className="spinner"></div><p>Carregando perfil...</p></div>;
   }
 
   if (error) {
-    return (
-      <div className="error-container">
-        <h2>Erro ao carregar perfil</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Tentar novamente</button>
-      </div>
-    );
+    return <div className="error-container"><h2>Erro ao carregar perfil</h2><p>{error}</p><button onClick={() => window.location.reload()}>Tentar novamente</button></div>;
   }
 
   return (
     <div className={`profile-page ${theme}`}>
       <Navbar />
+      <br></br>
+      <br></br>
       <header className="profile-header">
-      <div className="header-content">
-        <div className="profile-info">
-        <div className="user-details">
-          {profile?.user ? (
-          <>
-            <h1>{profile.user.nome}</h1>
-            <p>Telefone: {profile.user.telefone}</p>
-            <p>Membro desde: {profile.user.data_cadastro}</p>
-          </>
-          ) : (
-          <p>Dados do usuário não encontrados</p>
-          )}
+        <div className="header-content">
+          <div className="profile-info">
+            <div className="user-details">
+              {editing ? (
+                <div className="edit-form">
+                  <input type="text" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} placeholder="Nome" />
+                  <input type="text" value={editForm.telefone} onChange={e => setEditForm({ ...editForm, telefone: e.target.value })} placeholder="Telefone" />
+                  <input type="date" value={editForm.data_nascimento} onChange={e => setEditForm({ ...editForm, data_nascimento: e.target.value })} placeholder="Data de Nascimento" />
+                  <button onClick={handleUpdateProfile}>Salvar</button>
+                  <button onClick={() => setEditing(false)}>Cancelar</button>
+                </div>
+              ) : profile?.user ? (
+                <>
+                  <h1>{profile.user.nome}</h1>
+                  <p>Telefone: {profile.user.telefone}</p>
+                  <p>Membro desde: {profile.user.data_cadastro}</p>
+                  <button className="edit-profile-btn" onClick={() => setEditing(true)}>Editar Perfil</button>
+                </>
+              ) : <p>Dados do usuário não encontrados</p>}
 
-          <div className="theme-selector">
-          <label htmlFor="theme-toggle">Modo Escuro:</label>
-          <button 
-            id="theme-toggle"
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}
-          >
-            <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}>
-            <div className="switch-handle"></div>
+              <div className="theme-selector">
+                <label htmlFor="theme-toggle">Modo Escuro:</label>
+                <button id="theme-toggle" className="theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Desativar modo escuro' : 'Ativar modo escuro'}>
+                  <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}><div className="switch-handle"></div></div>
+                  <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
+                </button>
+              </div>
+
+              <div className="delete-account-section">
+                <button className="delete-account-btn" onClick={handleDeleteAccount}>Excluir Minha Conta</button>
+              </div>
             </div>
-            <span>{theme === 'dark' ? 'Ativado' : 'Desativado'}</span>
-          </button>
-          </div>
-          
-          <div className="delete-account-section">
-          <button 
-            className="delete-account-btn"
-            onClick={handleDeleteAccount}
-          >
-            Excluir Minha Conta
-          </button>
           </div>
         </div>
-        </div>
-      </div>
       </header>
 
       <main className="profile-content">
@@ -237,10 +255,8 @@ const Profile: React.FC = () => {
             <>
               <h3>Doações em Dinheiro</h3>
               <ul>
-                {(profile?.doacoesDinheiro ?? []).map(d => (
-                  <li key={`d-${d.id}`}>
-                    <strong>R$ {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}
-                  </li>
+                {profile?.doacoesDinheiro.map(d => (
+                  <li key={`d-${d.id}`}><strong>R$ {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}</li>
                 ))}
               </ul>
             </>
@@ -250,10 +266,8 @@ const Profile: React.FC = () => {
             <>
               <h3>Doações de Roupas</h3>
               <ul>
-                {(profile?.doacoesRoupa ?? []).map(d => (
-                  <li key={`r-${d.id}`}>
-                    {d.quantidade}x {d.descricao} (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}
-                  </li>
+                {profile?.doacoesRoupa.map(d => (
+                  <li key={`r-${d.id}`}>{d.quantidade}x {d.descricao} (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}</li>
                 ))}
               </ul>
             </>
@@ -263,10 +277,8 @@ const Profile: React.FC = () => {
             <>
               <h3>Doações de Alimentos</h3>
               <ul>
-                {(profile?.doacoesAlimento ?? []).map(d => (
-                  <li key={`a-${d.id}`}>
-                    {d.quantidade_kg.toFixed(2)} kg de {d.descricao} em {d.data_doacao}
-                  </li>
+                {profile?.doacoesAlimento.map(d => (
+                  <li key={`a-${d.id}`}>{d.quantidade_kg.toFixed(2)} kg de {d.descricao} em {d.data_doacao}</li>
                 ))}
               </ul>
             </>

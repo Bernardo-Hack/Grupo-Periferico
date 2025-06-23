@@ -2,14 +2,17 @@
 /* ===         1. VARIÁVEIS DE TEMA E ESTILOS GLOBAIS            === */
 /* =================================================================== */
 
-/* Define um padrão de dimensionamento mais intuitivo para todos os elementos */
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Variáveis para o tema claro */
+.edit-profile-btn:hover {
+  background-color: var(--accent-danger-hover);
+}
+
+/* Tema Claro */
 .profile-page.light {
   --bg-primary: #f4f7f6;
   --bg-secondary: #ffffff;
@@ -17,7 +20,6 @@
   --text-secondary: #555555;
   --border-color: #e0e0e0;
   --shadow-color: rgba(0, 0, 0, 0.08);
-
   --accent-primary: #3085d6;
   --accent-primary-hover: #2871b8;
   --accent-danger: #d33;
@@ -25,7 +27,7 @@
   --accent-success: #28a745;
 }
 
-/* Variáveis para o tema escuro */
+/* Tema Escuro */
 .profile-page.dark {
   --bg-primary: #121212;
   --bg-secondary: #1e1e1e;
@@ -33,7 +35,6 @@
   --text-secondary: #a0a0a0;
   --border-color: #3a3a3a;
   --shadow-color: rgba(0, 0, 0, 0.25);
-
   --accent-primary: #58a6ff;
   --accent-primary-hover: #7db8ff;
   --accent-danger: #f85149;
@@ -42,11 +43,11 @@
 }
 
 /* =================================================================== */
-/* ===              2. LAYOUT PRINCIPAL DA PÁGINA                  === */
+/* ===              2. LAYOUT PRINCIPAL                            === */
 /* =================================================================== */
 
 .profile-page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
@@ -59,58 +60,93 @@
 .profile-content {
   width: 100%;
   max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   padding: 2.5rem 1.5rem;
 }
 
 .profile-content {
-  flex-grow: 1; /* Garante que o conteúdo principal ocupe o espaço vazio */
+  flex-grow: 1;
 }
 
 /* =================================================================== */
-/* ===                 3. CABEÇALHO E DETALHES DO USUÁRIO          === */
+/* ===              3. USUÁRIO E INFORMAÇÕES                      === */
 /* =================================================================== */
 
-.profile-header {
+.profile-info {
   background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  padding-top: 100px; /* Mantém o espaçamento para a navbar fixa */
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  margin-bottom: 2rem;
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Espaçamento vertical consistente */
+  gap: 0.8rem;
 }
 
 .user-details h1 {
-  margin: 0;
-  font-size: 2.75rem;
-  font-weight: 700;
+  font-size: 1.8rem;
+  font-weight: 600;
 }
 
 .user-details p {
-  margin: 0;
   font-size: 1rem;
   color: var(--text-secondary);
 }
 
-/* --- Área de Ações e Configurações --- */
-.user-actions {
-  margin-top: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.edit-form input {
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
+
+.edit-form button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  margin-right: 0.6rem;
+  font-weight: 600;
+  background-color: var(--accent-primary);
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.edit-form button:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.edit-profile-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  background-color: var(--accent-danger);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: fit-content;
+}
+
+.edit-profile-btn:hover {
+  background-color: var(--accent-danger-hover);
+}
+
+/* =================================================================== */
+/* ===            4. TEMA & AÇÕES DO USUÁRIO                      === */
+/* =================================================================== */
 
 .theme-selector {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .theme-toggle {
@@ -121,7 +157,6 @@
   border: none;
   cursor: pointer;
   color: var(--text-primary);
-  padding: 0;
 }
 
 .toggle-switch {
@@ -152,142 +187,102 @@
   transform: translateX(24px);
 }
 
-.logout-section, .delete-account-section {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Botões de Ação */
-.logout-btn, .delete-account-btn {
-  padding: 0.75rem 1.5rem;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  transition: all 0.2s ease-in-out;
-  max-width: 350px; /* Limita a largura em telas grandes */
-}
-
-.logout-btn {
-  background-color: var(--accent-primary);
-  color: white; /* Cor do texto pode ser fixa para botões de cor sólida */
-}
-
-.logout-btn:hover {
-  background-color: var(--accent-primary-hover);
-  transform: translateY(-2px);
+.delete-account-section {
+  margin-top: 2rem;
 }
 
 .delete-account-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
   background-color: var(--accent-danger);
   color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .delete-account-btn:hover {
   background-color: var(--accent-danger-hover);
-  transform: translateY(-2px);
 }
 
 /* =================================================================== */
-/* ===             4. CONTEÚDO PRINCIPAL (DOAÇÕES)               === */
+/* ===              5. DOAÇÕES E SEÇÃO DE CONTEÚDO                === */
 /* =================================================================== */
 
 .donations-section {
   display: grid;
-  /* Cria um layout de grid responsivo sem media queries! */
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
 .donations-section h2 {
-  grid-column: 1 / -1; /* Título ocupa a largura total do grid */
+  grid-column: 1 / -1;
   font-size: 2rem;
-  margin-bottom: 0;
-  padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
-}
-
-.donation-card {
-  background-color: var(--bg-secondary);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px var(--shadow-color);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.donation-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px var(--shadow-color);
-}
-
-.donation-card h3 {
-  font-size: 1.3rem;
-  margin-top: 0;
+  padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.donation-card ul {
+.donations-section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.donations-section ul {
   list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.donation-card li {
+  padding-left: 1rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  margin-bottom: 1rem;
 }
 
-.donation-card li strong {
+.donations-section ul li {
+  margin-bottom: 0.6rem;
+  line-height: 1.4;
+}
+
+.donations-section ul li strong {
   color: var(--text-primary);
-  font-weight: 600;
 }
 
-/* Mensagem de "nenhuma doação" */
 .donations-section > p {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 3rem 1.5rem;
   background-color: var(--bg-secondary);
-  border-radius: 12px;
+  padding: 2rem;
+  border-radius: 8px;
   color: var(--text-secondary);
 }
 
 /* =================================================================== */
-/* ===                     5. RODAPÉ                             === */
+/* ===              6. RODAPÉ E RESPONSIVIDADE                    === */
 /* =================================================================== */
 
 .profile-footer {
   text-align: center;
   padding: 1.5rem;
-  margin-top: auto; /* Empurra o rodapé para baixo em telas com pouco conteúdo */
   background-color: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.9rem;
+  margin-top: auto;
 }
-
-/* =================================================================== */
-/* ===                6. AJUSTES RESPONSIVOS                     === */
-/* =================================================================== */
 
 @media (max-width: 768px) {
   .user-details h1 {
-    font-size: 2rem;
+    font-size: 1.6rem;
+  }
+
+  .edit-form input {
+    font-size: 0.95rem;
+  }
+
+  .edit-profile-btn {
+    width: 100%;
   }
 
   .profile-header,
   .profile-content {
-    padding: 2rem 1rem;
-  }
-
-  /* Faz os botões ocuparem mais espaço em telas menores */
-  .logout-btn, .delete-account-btn {
-    max-width: 100%;
+    padding: 1.5rem 1rem;
   }
 }
