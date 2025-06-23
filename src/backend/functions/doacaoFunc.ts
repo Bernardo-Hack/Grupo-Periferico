@@ -109,7 +109,7 @@ export const registerClothesDonation = async (req: AuthRequest, res: Response, n
     //   quantidade: number|string (quantidade de peças)
     //   tamanho: string|null (opcional, ex: 'P','M','G','GG')
 
-    const { tipo, tamanho, quantidade: quantidadeRaw } = req.body;
+    const { tipo, tamanho, quantidade: quantidadeRaw, descricao } = req.body;
     const quantidade = parseNumber(quantidadeRaw);
     
     // Validações:
@@ -127,10 +127,10 @@ export const registerClothesDonation = async (req: AuthRequest, res: Response, n
     }
 
     const insertSQL = `
-      INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao)
-      VALUES ($1, $2, $3, $4, NOW())
+      INSERT INTO DoacaoRoupa (usuario_id, tipo, quantidade, tamanho, data_doacao, descricao)
+      VALUES ($1, $2, $3, $4, NOW(), $5)
     `;
-    await pool.query(insertSQL, [userId, tipo, quantidade, tamanho || null]);
+    await pool.query(insertSQL, [userId, tipo, quantidade, tamanho ,descricao|| null]);
 
     return res.status(201).json({
       success: true,
