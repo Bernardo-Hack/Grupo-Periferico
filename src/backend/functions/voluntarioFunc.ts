@@ -38,7 +38,7 @@ export const registerVoluntary = async (req: AuthRequest, res: Response, next: N
         message: 'Preencha nome e idade corretamente.',
       });
     }
-    if ( idade === null || idade <= 17) {
+    if ( idade === null || idade > 17) {
       return res.status(400).json({
         success: false,
         message: 'Idade deve ser um número positivo.',

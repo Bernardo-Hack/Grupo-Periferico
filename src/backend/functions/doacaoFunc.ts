@@ -63,7 +63,10 @@ export const registerDonation = async (req: AuthRequest, res: Response, next: Ne
       });
     }
     const moedasPermitidas = ['BRL', 'USD', 'EUR'];
-    const moedaFinal = moedasPermitidas.includes(moeda) ? moeda : 'BRL';
+    if (!moedasPermitidas.includes(moeda)) {
+      return res.status(400).json({ success: false, message: 'Moeda inválida.' });
+    }
+    const moedaFinal = moeda;
 
 
     // Monta e executa o INSERT

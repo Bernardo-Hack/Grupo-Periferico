@@ -12,7 +12,7 @@ const Voluntary: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const voluntaryName = (document.getElementById('name') as HTMLInputElement)?.value;
+    const voluntaryName = (document.getElementById('nome') as HTMLInputElement)?.value;
     const voluntaryEmail = (document.getElementById('email') as HTMLInputElement)?.value;
     const voluntaryAge = (document.getElementById('age') as HTMLInputElement)?.value;
     const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLInputElement)?.value;
@@ -30,9 +30,9 @@ const Voluntary: React.FC = () => {
         body: JSON.stringify({
           nome: voluntaryName,
           email: voluntaryEmail,
-          quantidade: voluntaryAge,
-          tipo: voluntaryAviability,
-          tamanho: voluntaryExperience
+          idade: voluntaryAge,
+          disponibilidade: voluntaryAviability,
+          experiencia: voluntaryExperience
         })
       });
 
