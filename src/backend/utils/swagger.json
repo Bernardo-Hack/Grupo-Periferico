@@ -1,0 +1,360 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API do Grupo Periférico",
+    "version": "1.0.0",
+    "description": "Documentação da API para o projeto da ONG Grupo Periférico, cobrindo todas as rotas de usuário, admin, doações e gráficos."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Servidor de Desenvolvimento"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Usuário",
+      "description": "Operações relacionadas a usuários, como registro, login e gerenciamento de perfil."
+    },
+    {
+      "name": "Admin",
+      "description": "Operações administrativas e rotas protegidas para administradores."
+    },
+    {
+      "name": "Doações",
+      "description": "Rotas para registrar doações de usuários autenticados."
+    },
+    {
+      "name": "Gráficos",
+      "description": "Endpoints para fornecer dados para os gráficos do dashboard."
+    }
+  ],
+  "paths": {
+    "/user/reg_user": {
+      "post": {
+        "tags": ["Usuário"],
+        "summary": "Registra um novo usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {"type": "string"},
+                  "cpf": {"type": "string"},
+                  "telefone": {"type": "string"},
+                  "dt_nasc": {"type": "string", "format": "date"},
+                  "senha": {"type": "string", "format": "password"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Usuário criado com sucesso."},
+          "400": {"description": "Dados de entrada inválidos."}
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": ["Usuário"],
+        "summary": "Realiza o login de um usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"$ref": "#/components/responses/LoginSuccess"},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "tags": ["Usuário"],
+        "summary": "Obtém dados do perfil do usuário logado",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Sucesso, retorna os dados do perfil e histórico de doações."},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/Forbidden"},
+          "404": {"description": "Usuário não encontrado."}
+        }
+      }
+    },
+    "/user/edt_profile": {
+      "put": {
+        "tags": ["Usuário"],
+        "summary": "Atualiza dados do perfil do usuário logado",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {"type": "string"},
+                  "telefone": {"type": "string"},
+                  "data_nascimento": {"type": "string", "format": "date"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Perfil atualizado com sucesso."},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      }
+    },
+    "/user/delete": {
+      "delete": {
+        "tags": ["Usuário"],
+        "summary": "Exclui a conta do usuário logado",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "senha": {"type": "string", "format": "password"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Conta excluída com sucesso."},
+          "400": {"description": "Senha é obrigatória."},
+          "401": {"description": "Senha incorreta."},
+          "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      }
+    },
+    "/admin/login": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Realiza o login de um administrador",
+        "description": "Autentica um administrador e retorna um token JWT com 'role: admin'.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"$ref": "#/components/responses/LoginSuccess"},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/adminUserDashboard": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Obtém a lista de todos os usuários (Protegido)",
+        "description": "Rota para o dashboard de admin que retorna a lista de todos os usuários. Requer token de admin.",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Sucesso."},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      }
+    },
+    "/adminMonetaryDonationDashboard": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Obtém a lista de doações em dinheiro (Protegido)",
+        "description": "Rota para o dashboard de admin que retorna a lista de doações monetárias. Requer token de admin.",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Sucesso."},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      }
+    },
+    "/api/doacoes/dinheiro": {
+      "post": {
+        "tags": ["Doações"],
+        "summary": "Registra uma doação em dinheiro",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "valor": {"type": "number", "format": "float"},
+                  "metodo_pagamento": {"type": "string", "enum": ["pix", "cartao", "boleto"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Doação registrada com sucesso."},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/api/doacoes/roupas": {
+      "post": {
+        "tags": ["Doações"],
+        "summary": "Registra uma doação de roupas",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipo": {"type": "string", "description": "Ex: Camiseta, Calça"},
+                  "quantidade": {"type": "integer"},
+                  "tamanho": {"type": "string", "description": "Ex: P, M, G"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Doação registrada com sucesso."},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/api/doacoes/alimentos": {
+      "post": {
+        "tags": ["Doações"],
+        "summary": "Registra uma doação de alimentos",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipo": {"type": "string", "description": "Ex: Arroz, Feijão"},
+                  "quantidade": {"type": "number", "format": "float", "description": "Quantidade em kg"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Doação registrada com sucesso."},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/graficos/dinheiro": {
+      "get": {
+        "tags": ["Gráficos"],
+        "summary": "Obtém dados para gráfico de doações monetárias",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["7dias", "30dias", "ano"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Sucesso."}
+        }
+      }
+    },
+    "/graficos/roupas": {
+      "get": {
+        "tags": ["Gráficos"],
+        "summary": "Obtém dados para gráfico de doações de roupas",
+        "responses": {
+          "200": {"description": "Sucesso."}
+        }
+      }
+    },
+    "/graficos/alimentos": {
+      "get": {
+        "tags": ["Gráficos"],
+        "summary": "Obtém dados para gráfico de doações de alimentos",
+        "responses": {
+          "200": {"description": "Sucesso."}
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "joao.silva"
+          },
+          "senha": {
+            "type": "string",
+            "format": "password",
+            "example": "senha123"
+          }
+        },
+        "required": ["nome", "senha"]
+      }
+    },
+    "responses": {
+      "LoginSuccess": {
+        "description": "Login bem-sucedido, retorna token JWT.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Dados de entrada inválidos."
+      },
+      "Unauthorized": {
+        "description": "Não autorizado. Token não fornecido ou credenciais inválidas."
+      },
+      "Forbidden": {
+        "description": "Acesso proibido. Token inválido/expirado ou sem permissão necessária."
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

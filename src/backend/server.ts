@@ -3,16 +3,23 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
-// --- REMOVIDO: import session from 'express-session'; ---
 import cors from 'cors';
-
 import userRoutes from './functions/userFunc';
 import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
 import { loadUser, loadDoacao } from './functions/adminFunc';
 import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
 import testDB from './functions/testDB';
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './utils/swagger.json';
 
 const app = express();
+
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument)
+);
 
 // ------------------------------------------------------------
 // 1) Middleware de parsing do body e logging
