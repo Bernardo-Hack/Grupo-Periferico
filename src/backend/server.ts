@@ -6,7 +6,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import userRoutes from './functions/userFunc';
 import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
-import { loadUser, loadDoacao } from './functions/adminFunc';
+import { loginAdmin, logoutAdmin, adminRoleMiddleware } from './functions/adminFunc';
 import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
 import testDB from './functions/testDB';
 import swaggerUi from 'swagger-ui-express';
@@ -54,14 +54,20 @@ app.use(cors(corsOptions));
 // ------------------------------------------------------------
 // 3) Rotas
 app.use('/user', userRoutes);
-app.get('/adminUserDashboard', loadUser);
-app.get('/adminMonetaryDonationDashboard', loadDoacao);
+
 
 function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
+
+app.post('/api/admin/login', asyncHandler(loginAdmin));
+app.post('/api/admin/logout', logoutAdmin);
+
+app.get('/api/admin/dashboards', verificarToken, adminRoleMiddleware, (req, res) => {
+    res.json({ message: 'Informação secreta de administrador.' });
+});
 
 app.post('/api/doacoes/dinheiro', verificarToken, asyncHandler(registerDonation));
 app.post('/api/doacoes/roupas', verificarToken, asyncHandler(registerClothesDonation));

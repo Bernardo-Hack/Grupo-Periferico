@@ -1,95 +1,65 @@
-// adminFunc.ts
-import { Router, Request, Response, NextFunction } from 'express';
+// src/backend/functions/adminFunc.ts
+
+import { Response, NextFunction } from 'express';
 import db from '../config/db';
 import { comparePassword } from '../utils/encrypt';
+// Importando as funções e interfaces corretas do seu novo arquivo jwt.ts
+import { gerarTokenJWT, AuthRequest } from '../utils/jwt';
 
-const router = Router();
+export async function loginAdmin(req: AuthRequest, res: Response) {
+  const { email, senha } = req.body;
 
-// AsyncHandler igual ao userFunc.ts
-const asyncHandler = (fn: any) =>
-  (req: Request, res: Response, next: NextFunction) =>
-    Promise.resolve(fn(req, res, next)).catch(next);
+  if (!email || !senha) {
+    return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+  }
 
-// Extensão da sessão
+  try {
+    // Garanta que sua tabela 'admin' tenha as colunas 'id', 'nome' e 'senha_hash'
+    const { rows } = await db.query('SELECT * FROM admin WHERE email = $1', [email]);
+    const admin = rows[0];
 
-declare module 'express-session' {
-  interface SessionData {
-    adminId?: number;
+    if (!admin) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    const isMatch = await comparePassword(senha, admin.senha_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    // Criar o payload para o token com os campos definidos na interface JWTPayload
+    const payload = {
+      id: admin.id,
+      nome: admin.nome,
+      role: 'admin'
+    };
+
+    // Gerar o token usando a função 'gerarTokenJWT' do seu arquivo
+    const token = gerarTokenJWT(payload);
+
+    return res.status(200).json({ token });
+
+  } catch (err) {
+    console.error('Erro no login do admin:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 }
 
-// ========== MIDDLEWARES ==========
-
-export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
-  req.session.adminId ? next() : res.redirect('/admin/login');
-};
-
-// ========== ROTAS ADMIN ==========
-
-router.get('/admin/:username/:password', asyncHandler(async (req: Request, res: Response) => {
-  const { username, password } = req.params;
-
-  const { rows } = await db.query(
-    'SELECT id, senha_hash FROM admin WHERE username = $1',
-    [username]
-  );
-
-  if (rows.length === 0 || !(await comparePassword(password, rows[0].senha_hash))) {
-    return res.status(401).json({ error: 'Acesso negado' });
+/**
+ * Middleware para verificar se o usuário autenticado tem o papel ('role') de 'admin'.
+ * Este middleware DEVE ser usado SEMPRE DEPOIS do middleware 'verificarToken'.
+ */
+export function adminRoleMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+  // O middleware 'verificarToken' já validou o token e anexou os dados em 'req.usuario'
+  if (req.usuario && req.usuario.role === 'admin') {
+    next(); // Se o papel for 'admin', o acesso é permitido.
+  } else {
+    // Se não houver usuário ou o papel não for 'admin', o acesso é negado.
+    res.status(403).json({ error: 'Acesso proibido. Requer privilégios de administrador.' });
   }
+}
 
-  req.session.adminId = rows[0].id;
-  res.redirect('/admin/dashboard');
-}));
-
-router.get('/admin/logout', (req: Request, res: Response) => {
-  req.session.destroy(() => res.redirect('/'));
-});
-
-// ========== FUNÇÕES DASHBOARD ==========
-
-export const loadUser = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    // ALTERAÇÃO: A desestruturação [results] foi trocada por { rows: results }
-    const { rows: results } = await db.query(
-      'SELECT * FROM usuario ORDER BY nome'
-    );
-
-    res.render("admin_dashboard", {
-      usuarios: results || [],
-      currentDate: new Date().toLocaleDateString('pt-BR'),
-      pageTitle: "Painel Administrativo"
-    });
-  } catch (error) {
-    console.error("Erro completo:", error);
-    res.render("admin_dashboard", { usuarios: [] });
-  }
-});
-
-export const loadDoacao = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    // ALTERAÇÃO: A desestruturação [results] foi trocada por { rows: results }
-    const { rows: results } = await db.query(`
-      SELECT d.id, u.nome, d.valor, d.metodo_pagamento, d.data_doacao
-      FROM DoacaoDinheiro d
-      JOIN Usuario u ON d.usuario_id = u.id
-      ORDER BY d.data_doacao DESC
-    `);
-
-    res.render('admin_doacoes', {
-      doacoes: results,
-      pageTitle: "Doações em Dinheiro"
-    });
-  } catch (error) {
-    console.error("Erro ao buscar doações:", error);
-    res.render('admin_doacoes', { doacoes: [] });
-  }
-});
-
-// ========== ROTAS PROTEGIDAS ==========
-
-router.get('/admin/dashboard', adminAuth, loadUser);
-router.get('/admin/doacoes', adminAuth, loadDoacao);
-
-export default router;
-  
+// A função de logout não precisa de alterações
+export function logoutAdmin(req: AuthRequest, res: Response) {
+  res.status(200).json({ message: 'Logout bem-sucedido.' });
+}
