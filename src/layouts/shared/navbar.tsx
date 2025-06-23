@@ -13,7 +13,7 @@ import '../style/navbarCSS.css';
 export const Navbar = () => {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate(); // Usar para redirecionar após logout
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.VITE_API_URL;
 
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
