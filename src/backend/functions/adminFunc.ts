@@ -31,26 +31,26 @@ router.post(
 router.post(
   '/login',
   asyncHandler(async (req, res) => {
-    const { nome, senha } = req.body;
-    if (!nome || !senha) {
-      res.status(400).json({ error: 'Preencha nome e senha.' });
+    const { id, senha } = req.body;
+    if (!senha) {
+      res.status(400).json({ error: 'Preencha o Id e a senha.' });
       return;
     }
 
     const { rows } = await pool.query(
-      'SELECT id, nome, senha_hash FROM administrador WHERE nome = $1',
-      [nome]
+      'SELECT id, nome, senha_hash FROM administrador WHERE id = $1',
+      [id]
     );
 
     if (rows.length === 0) {
-      res.status(401).json({ error: 'Nome ou senha inválidos.' });
+      res.status(401).json({ error: 'Id ou senha inválidos.' });
       return;
     }
 
     const admin = rows[0];
     const valid = await comparePassword(senha, admin.senha_hash);
     if (!valid) {
-      res.status(401).json({ error: 'Nome ou senha inválidos.' });
+      res.status(401).json({ error: 'Id ou senha inválidos.' });
       return;
     }
 
