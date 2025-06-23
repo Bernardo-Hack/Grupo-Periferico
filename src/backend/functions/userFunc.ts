@@ -115,13 +115,13 @@ router.get(
     const [dinheiroResult, roupaResult, alimentoResult] = await Promise.all([
       pool.query(
         `SELECT id, valor, metodo_pagamento AS metodo, 
-                TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao, origem
+                TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
          FROM DoacaoDinheiro WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
         [userId]
       ),
       pool.query(
         `SELECT id, tipo AS descricao, quantidade, tamanho, 
-                TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao
+                TO_CHAR(data_doacao, 'YYYY-MM-DD HH24:MI:SS') AS data_doacao, descricao
          FROM DoacaoRoupa WHERE usuario_id = $1 ORDER BY data_doacao DESC`,
         [userId]
       ),
