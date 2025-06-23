@@ -2,12 +2,16 @@
 import React, { useEffect } from 'react';
 import { initMDB, Input, Ripple } from 'mdb-ui-kit';
 import { Navbar } from '../../layouts/shared/navbar';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import '../../layouts/style/user_registerCSS.css';
 
 const AdminLogin: React.FC = () => {
+  const apiUrl = process.env.VITE_API_URL;
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.title = 'Login do Administrador';
     try {
@@ -27,22 +31,24 @@ const AdminLogin: React.FC = () => {
       return Swal.fire('Erro', 'Preencha ID e senha.', 'error');
     }
 
-    const res = await fetch('http://localhost:5000/adm/login', {
+    const res = await fetch(`${apiUrl}/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ id, senha }),
     });
 
     const json = await res.json();
-    if (json.ok) {
+
+    if (res.status === 200 && json.token) {
+      localStorage.setItem('jwtToken', json.token);
+
       Swal.fire({
         icon: 'success',
         title: `Bem-vindo, ${json.nome}!`,
-        timer: 2000,
+        timer: 1500,
         showConfirmButton: false,
       }).then(() => {
-        window.location.href = '/admin';
+        navigate('/admin-dashboard');
       });
     } else {
       Swal.fire('Erro', json.error || 'ID ou senha inválidos.', 'error');

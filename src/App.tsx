@@ -5,8 +5,8 @@ import { ThemeProvider } from '../src/contexts/ThemeContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
-import Adm from './pages/adm/admin';
-import AdminLogin from './pages/adm/adminLogin'; // <-- Importação do novo login
+import AdminDashboard from './pages/adm/admin_dashboard';
+import AdminLogin from './pages/adm/admin_login';
 import Home from './pages/home';
 import Monetary from './pages/donations/monetary';
 import Clothes from './pages/donations/clothes';
@@ -103,8 +103,8 @@ export default function App() {
             <Route path="/doacao-alimentos" element={<Foods />} />
             <Route path="/imigrantes" element={<Immigrant />} />
             <Route path="/voluntarios" element={<Voluntary />} />
-            <Route path="/admin" element={<Adm />} />
-            <Route path="/login-admin" element={<AdminLogin />} /> {/* <- AQUI */}
+            <Route path="/login-admin" element={<AdminLogin />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </MainLayout>

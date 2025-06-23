@@ -13,9 +13,11 @@ type Dinheiro = { metodo_pagamento: string; total: number };
 type Roupa = { tipo: string; total: number };
 type Alimento = { tipo: string; total: number };
 
-const Admin = () => {
+const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const apiUrl = process.env.VITE_API_URL;
+  const token = localStorage.getItem('jwtToken');
 
   const [dinheiro, setDinheiro] = useState<Dinheiro[]>([]);
   const [roupas, setRoupas] = useState<Roupa[]>([]);
@@ -31,20 +33,19 @@ const Admin = () => {
 
   // Verifica se o admin está logado
   useEffect(() => {
-    fetch('http://localhost:5000/adm/check-session', {
+    fetch(`${apiUrl}/admin/check-token`, {
       method: 'GET',
-      credentials: 'include',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Formato padrão
+        },
     })
       .then(res => {
-        if (!res.ok) throw new Error('Não autorizado');
+        if (res.status == 403) throw new Error('Não autorizado');
         return res.json();
       })
-      .then(data => {
-        if (!data.isAdmin) throw new Error('Não autorizado');
-        setIsLoading(false);
-      })
       .catch(() => {
-        navigate('/admin-login');
+        navigate('/login-admin');
       });
   }, [navigate]);
 
@@ -52,7 +53,7 @@ const Admin = () => {
     const queryDinheiro = filtroDinheiro !== 'todos' ? `?periodo=${filtroDinheiro}` : '';
     const queryAlimento = filtroAlimento !== 'todos' ? `?periodo=${filtroAlimento}` : '';
 
-    fetch(`http://localhost:5000/api/graficos/doacoes/dinheiro${queryDinheiro}`)
+    fetch(`${apiUrl}/api/graficos/doacoes/dinheiro${queryDinheiro}`)
       .then(res => res.ok ? res.json() : Promise.reject(res))
       .then(data => {
         const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
@@ -61,14 +62,14 @@ const Admin = () => {
         setTotalDinheiro(total);
       });
 
-    fetch('http://localhost:5000/api/graficos/doacoes/roupas')
+    fetch(`${apiUrl}/api/graficos/doacoes/roupas`)
       .then(res => res.ok ? res.json() : Promise.reject(res))
       .then(data => {
         const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
         setRoupas(formatted);
       });
 
-    fetch(`http://localhost:5000/api/graficos/doacoes/alimentos${queryAlimento}`)
+    fetch(`${apiUrl}/api/graficos/doacoes/alimentos${queryAlimento}`)
       .then(res => res.ok ? res.json() : Promise.reject(res))
       .then(data => {
         const formatted = data.map((item: any) => ({ ...item, total: Number(item.total) }));
@@ -251,4 +252,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default AdminDashboard;

@@ -1,65 +1,69 @@
 // src/backend/functions/adminFunc.ts
 
-import { Response, NextFunction } from 'express';
-import db from '../config/db';
+import { Router, Response, NextFunction } from 'express';
 import { comparePassword } from '../utils/encrypt';
-// Importando as funções e interfaces corretas do seu novo arquivo jwt.ts
 import { gerarTokenJWT, AuthRequest } from '../utils/jwt';
+import pool from '../config/db';
 
-export async function loginAdmin(req: AuthRequest, res: Response) {
-  const { email, senha } = req.body;
+const router = Router();
 
-  if (!email || !senha) {
-    return res.status(400).json({ error: 'Email e senha são obrigatórios' });
-  }
-
-  try {
-    // Garanta que sua tabela 'admin' tenha as colunas 'id', 'nome' e 'senha_hash'
-    const { rows } = await db.query('SELECT * FROM admin WHERE email = $1', [email]);
-    const admin = rows[0];
-
-    if (!admin) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
-    }
-
-    const isMatch = await comparePassword(senha, admin.senha_hash);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
-    }
-
-    // Criar o payload para o token com os campos definidos na interface JWTPayload
-    const payload = {
-      id: admin.id,
-      nome: admin.nome,
-      role: 'admin'
-    };
-
-    // Gerar o token usando a função 'gerarTokenJWT' do seu arquivo
-    const token = gerarTokenJWT(payload);
-
-    return res.status(200).json({ token });
-
-  } catch (err) {
-    console.error('Erro no login do admin:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-}
+const asyncHandler = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<any>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 
 /**
  * Middleware para verificar se o usuário autenticado tem o papel ('role') de 'admin'.
  * Este middleware DEVE ser usado SEMPRE DEPOIS do middleware 'verificarToken'.
  */
-export function adminRoleMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  // O middleware 'verificarToken' já validou o token e anexou os dados em 'req.usuario'
-  if (req.usuario && req.usuario.role === 'admin') {
-    next(); // Se o papel for 'admin', o acesso é permitido.
-  } else {
-    // Se não houver usuário ou o papel não for 'admin', o acesso é negado.
-    res.status(403).json({ error: 'Acesso proibido. Requer privilégios de administrador.' });
-  }
-}
+router.post(
+  'check-token',
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    // O middleware 'verificarToken' já validou o token e anexou os dados em 'req.usuario'
+    if (req.usuario && req.usuario.role === 'admin') {
+      res.status(200).json({ message: 'Token válido para administrador.' });
+    } else {
+      res.status(403).json({ error: 'Acesso proibido. Requer privilégios de administrador.' });
+    }
+  })
+);
+
+router.post(
+  '/login',
+  asyncHandler(async (req, res) => {
+    const { nome, senha } = req.body;
+    if (!nome || !senha) {
+      res.status(400).json({ error: 'Preencha nome e senha.' });
+      return;
+    }
+
+    const { rows } = await pool.query(
+      'SELECT id, nome, senha_hash FROM administrador WHERE nome = $1',
+      [nome]
+    );
+
+    if (rows.length === 0) {
+      res.status(401).json({ error: 'Nome ou senha inválidos.' });
+      return;
+    }
+
+    const admin = rows[0];
+    const valid = await comparePassword(senha, admin.senha_hash);
+    if (!valid) {
+      res.status(401).json({ error: 'Nome ou senha inválidos.' });
+      return;
+    }
+
+    const payload = { id: admin.id, nome: admin.nome, role: 'admin' };
+    const token = gerarTokenJWT(payload);
+
+    res.status(200).json({ token: token });
+  })
+);
 
 // A função de logout não precisa de alterações
 export function logoutAdmin(req: AuthRequest, res: Response) {
   res.status(200).json({ message: 'Logout bem-sucedido.' });
 }
+
+export default router;
