@@ -59,6 +59,17 @@ CREATE TABLE IF NOT EXISTS DoacaoAlimento (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
+CREATE TABLE Distribuicao (
+    id SERIAL PRIMARY KEY,
+    doacao_id INT NOT NULL,
+    tipo_doacao VARCHAR(10) NOT NULL CHECK (tipo_doacao IN ('dinheiro', 'roupa', 'alimento')),
+    data_distribuicao DATE NOT NULL,
+    admin_id INT NOT NULL,
+    usuario_voluntario_id INT,
+    FOREIGN KEY (admin_id) REFERENCES Administrador(id),
+    FOREIGN KEY (usuario_voluntario_id) REFERENCES Usuario(id)
+);
+
 CREATE TABLE IF NOT EXISTS Certificado (
     id SERIAL PRIMARY KEY,
     usuario_id INT NOT NULL,
