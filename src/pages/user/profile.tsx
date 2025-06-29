@@ -253,8 +253,8 @@ const Profile: React.FC = () => {
 
           {(profile?.doacoesDinheiro?.length ?? 0) > 0 && (
             <>
-              <h3>Doações em Dinheiro</h3>
               <ul>
+                <h3>Doações em Dinheiro</h3>
                 {profile?.doacoesDinheiro.map(d => (
                   <li key={`d-${d.id}`}><strong>R$ {d.valor.toFixed(2)}</strong> via {d.metodo} em {d.data_doacao}</li>
                 ))}
@@ -264,8 +264,8 @@ const Profile: React.FC = () => {
 
           {(profile?.doacoesRoupa?.length ?? 0) > 0 && (
             <>
-              <h3>Doações de Roupas</h3>
               <ul>
+                <h3>Doações de Roupas</h3>
                 {profile?.doacoesRoupa.map(d => (
                   <li key={`r-${d.id}`}>{d.quantidade}x {d.descricao} (tamanho {d.tamanho || 'N/A'}) em {d.data_doacao}</li>
                 ))}
@@ -275,8 +275,8 @@ const Profile: React.FC = () => {
 
           {(profile?.doacoesAlimento?.length ?? 0) > 0 && (
             <>
-              <h3>Doações de Alimentos</h3>
               <ul>
+                <h3>Doações de Alimentos</h3>
                 {profile?.doacoesAlimento.map(d => (
                   <li key={`a-${d.id}`}>{d.quantidade_kg.toFixed(2)} kg de {d.descricao} em {d.data_doacao}</li>
                 ))}
