@@ -1,4 +1,3 @@
-// src/backend/functions/voluntarioFunc.ts (Nome do arquivo corrigido para refletir a função)
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../utils/jwt';
 import pool from '../config/db';
@@ -27,8 +26,7 @@ function parseNumber(value: any): number | null {
 // src/backend/functions/voluntarioFunc.ts
 export const registerVoluntary = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { nome, email, idade: idadeRaw, disponibilidade, experiencia, tipo_sanguineo } = req.body;
-    const idade = parseNumber(idadeRaw);
+    const { nome, email, disponibilidade, experiencia, tipo_sanguineo } = req.body;
 
     if (!nome || !email) {
       return res.status(400).json({
@@ -37,19 +35,12 @@ export const registerVoluntary = async (req: AuthRequest, res: Response, next: N
       });
     }
 
-    if (idade === null || idade < 18) {
-      return res.status(400).json({
-        success: false,
-        message: 'Você precisa ter pelo menos 18 anos para ser voluntário.',
-      });
-    }
-
     const insertSQL = `
-      INSERT INTO voluntario (nome, email, idade, disponibilidade, experiencia, data_cadastro,  tipo_sanguineo)
-      VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+      INSERT INTO "Voluntario" (nome, email, disponibilidade, experiencia, data_cadastro, tipo_sanguineo)
+      VALUES ($1, $2, $3, $4, NOW(), $5)
     `;
 
-    await pool.query(insertSQL, [nome, email, idade, disponibilidade, experiencia, tipo_sanguineo]);
+    await pool.query(insertSQL, [nome, email, disponibilidade, experiencia, tipo_sanguineo]);
 
     return res.status(201).json({
       success: true,

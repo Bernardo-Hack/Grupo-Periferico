@@ -16,9 +16,8 @@ const Voluntary: React.FC = () => {
 
     const voluntaryName = (document.getElementById('nome') as HTMLInputElement)?.value;
     const voluntaryEmail = (document.getElementById('email') as HTMLInputElement)?.value;
-    const voluntaryAge = (document.getElementById('idade') as HTMLInputElement)?.value;
     const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLSelectElement)?.value;
-    const voluntaryExperience = (document.getElementById('experiencia') as HTMLInputElement)?.value;
+    const voluntaryExperience = (document.getElementById('experiencia') as HTMLTextAreaElement)?.value;
     const voluntaryBloodType = (document.getElementById('tipo_sanguineo') as HTMLSelectElement)?.value;
 
     setLoading(true);
@@ -33,7 +32,6 @@ const Voluntary: React.FC = () => {
         body: JSON.stringify({
           nome: voluntaryName,
           email: voluntaryEmail,
-          idade: voluntaryAge,
           disponibilidade: voluntaryAviability,
           experiencia: voluntaryExperience,
           tipo_sanguineo: voluntaryBloodType,
@@ -84,9 +82,6 @@ const Voluntary: React.FC = () => {
 
         <label htmlFor="email">E-mail</label>
         <input type="email" id="email" required />
-
-        <label htmlFor="idade">Idade</label>
-        <input type="number" id="idade" required />
 
         <label htmlFor="disponibilidade">Disponibilidade</label>
         <select id="disponibilidade" required>
