@@ -45,8 +45,8 @@ export const registerVoluntary = async (req: AuthRequest, res: Response, next: N
     }
 
     const insertSQL = `
-      INSERT INTO voluntario (nome, email, idade, disponibilidade, experiencia, tipo_sanguineo, data_cadastro)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      INSERT INTO voluntario (nome, email, idade, disponibilidade, experiencia, data_cadastro,  tipo_sanguineo)
+      VALUES ($1, $2, $3, $4, $5, NOW(), $6)
     `;
 
     await pool.query(insertSQL, [nome, email, idade, disponibilidade, experiencia, tipo_sanguineo]);
