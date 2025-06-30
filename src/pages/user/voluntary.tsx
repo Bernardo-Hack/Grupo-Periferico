@@ -6,7 +6,9 @@ import Swal from 'sweetalert2';
 
 const Voluntary: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const apiUrl = process.env.VITE_API_URL;
+  const [submittedBloodType, setSubmittedBloodType] = useState<string | null>(null);
+
+  const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
   const token = localStorage.getItem('jwtToken');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,9 +17,9 @@ const Voluntary: React.FC = () => {
     const voluntaryName = (document.getElementById('nome') as HTMLInputElement)?.value;
     const voluntaryEmail = (document.getElementById('email') as HTMLInputElement)?.value;
     const voluntaryAge = (document.getElementById('idade') as HTMLInputElement)?.value;
-    const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLInputElement)?.value;
+    const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLSelectElement)?.value;
     const voluntaryExperience = (document.getElementById('experiencia') as HTMLInputElement)?.value;
-    const voluntaryBloodType = (document.getElementById('tipo_sanguineo') as HTMLInputElement)?.value;
+    const voluntaryBloodType = (document.getElementById('tipo_sanguineo') as HTMLSelectElement)?.value;
 
     setLoading(true);
 
@@ -26,7 +28,7 @@ const Voluntary: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           nome: voluntaryName,
@@ -34,38 +36,37 @@ const Voluntary: React.FC = () => {
           idade: voluntaryAge,
           disponibilidade: voluntaryAviability,
           experiencia: voluntaryExperience,
-          tipo_sanguineo: voluntaryBloodType
-        })
+          tipo_sanguineo: voluntaryBloodType,
+        }),
       });
 
       const json = await res.json();
       console.log('Resposta da API:', json);
 
-      if (res.status === 400 || res.status === 401) {
+      if (!res.ok) {
         throw new Error(json.message || 'Erro ao processar cadastro de voluntário');
       }
 
-      if (res.status === 201) {
-        await Swal.fire({
-          icon: 'success',
-          title: 'Cadastro realizado com sucesso!',
-          text: 'Obrigado por sua contribuição!',
-          confirmButtonColor: '#3085d6',
-          timer: 1500,
-          timerProgressBar: true,
-          willClose: () => {
-            window.location.href = '/voluntario/sucesso';
-          }
-        });
-      }
+      setSubmittedBloodType(voluntaryBloodType);
 
+      await Swal.fire({
+        icon: 'success',
+        title: 'Cadastro realizado com sucesso!',
+        text: 'Obrigado por sua contribuição!',
+        confirmButtonColor: '#3085d6',
+        timer: 1500,
+        timerProgressBar: true,
+      });
     } catch (err) {
       console.error('Erro no cadastro (frontend):', err);
       await Swal.fire({
         icon: 'error',
         title: 'Erro',
-        text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao cadastrar o voluntário.',
-        confirmButtonColor: '#3085d6'
+        text:
+          err instanceof Error
+            ? err.message
+            : 'Ocorreu um erro inesperado ao cadastrar o voluntário.',
+        confirmButtonColor: '#3085d6',
       });
     } finally {
       setLoading(false);
@@ -77,12 +78,16 @@ const Voluntary: React.FC = () => {
       <Navbar />
       <form className="donation-form voluntary-form" onSubmit={handleSubmit}>
         <h3>Preencha seus dados para participar</h3>
+
         <label htmlFor="nome">Nome Completo</label>
         <input type="text" id="nome" required />
+
         <label htmlFor="email">E-mail</label>
         <input type="email" id="email" required />
+
         <label htmlFor="idade">Idade</label>
         <input type="number" id="idade" required />
+
         <label htmlFor="disponibilidade">Disponibilidade</label>
         <select id="disponibilidade" required>
           <option value="">Selecione</option>
@@ -90,6 +95,7 @@ const Voluntary: React.FC = () => {
           <option value="eventos">Apenas para eventos específicos</option>
           <option value="integral">Tempo integral</option>
         </select>
+
         <label htmlFor="tipo_sanguineo">Tipo Sanguíneo</label>
         <select id="tipo_sanguineo" required>
           <option value="">Selecione</option>
@@ -102,17 +108,25 @@ const Voluntary: React.FC = () => {
           <option value="O+">O+</option>
           <option value="O-">O-</option>
         </select>
+
         <label htmlFor="experiencia">Experiência Anterior (opcional)</label>
         <textarea id="experiencia" rows={3}></textarea>
+
         <button type="submit" className="submit-donation">
-          Tornar-se Voluntário
+          {loading ? (
+            <>
+              <span className="spinner"></span> Enviando...
+            </>
+          ) : (
+            'Tornar-se Voluntário'
+          )}
         </button>
-        {loading ? (
-          <>
-            <span className="spinner"></span>
-            Enviando...
-          </>
-        ) : 'Voluntáriar-se'}
+
+        {submittedBloodType && (
+          <p style={{ marginTop: '15px', color: 'green' }}>
+            Seu tipo sanguíneo cadastrado: <strong>{submittedBloodType}</strong>
+          </p>
+        )}
       </form>
       <Footer />
     </div>
