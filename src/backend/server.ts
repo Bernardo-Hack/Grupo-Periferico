@@ -9,6 +9,7 @@ import adminRoutes from './functions/adminFunc';
 import { verificarToken } from './utils/jwt'; // ALTERAÇÃO: Importe o middleware
 import { registerDonation, registerClothesDonation, registerFoodDonation } from './functions/doacaoFunc';
 import { graficoDinheiro, graficoRoupas, graficoAlimentos } from './functions/graficosFunc';
+import { registerVoluntary } from './functions/voluntarioFunc';
 import testDB from './functions/testDB';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './utils/swagger.json';
@@ -62,6 +63,9 @@ function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => P
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
+
+// Rotas das doações
+app.post('/api/registrar-voluntario', verificarToken, asyncHandler(registerVoluntary));
 
 // Rotas das doações
 app.post('/api/doacoes/dinheiro', verificarToken, asyncHandler(registerDonation));
