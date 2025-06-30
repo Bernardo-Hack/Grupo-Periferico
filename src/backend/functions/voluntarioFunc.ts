@@ -45,7 +45,7 @@ export const registerVoluntary = async (req: AuthRequest, res: Response, next: N
     }
 
     const insertSQL = `
-      INSERT INTO voluntario (nome, email, idade, disponibilidade, experiencia, tipo_sanguineo, data_cadastro)
+      INSERT INTO Voluntario (nome, email, idade, disponibilidade, experiencia, tipo_sanguineo, data_cadastro)
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
     `;
 
