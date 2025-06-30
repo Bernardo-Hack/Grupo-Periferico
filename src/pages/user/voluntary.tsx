@@ -17,6 +17,7 @@ const Voluntary: React.FC = () => {
     const voluntaryAge = (document.getElementById('idade') as HTMLInputElement)?.value;
     const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLInputElement)?.value;
     const voluntaryExperience = (document.getElementById('experiencia') as HTMLInputElement)?.value;
+    const voluntaryBloodType = (document.getElementById('tipo_sanguineo') as HTMLInputElement)?.value;
 
     setLoading(true);
 
@@ -25,7 +26,7 @@ const Voluntary: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Formato padrão
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           nome: voluntaryName,
@@ -33,6 +34,7 @@ const Voluntary: React.FC = () => {
           idade: voluntaryAge,
           disponibilidade: voluntaryAviability,
           experiencia: voluntaryExperience,
+          tipo_sanguineo: voluntaryBloodType
         })
       });
 
@@ -65,8 +67,6 @@ const Voluntary: React.FC = () => {
         text: err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao cadastrar o voluntário.',
         confirmButtonColor: '#3085d6'
       });
-      console.error('Erro no cadastro:', err);
-
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,6 @@ const Voluntary: React.FC = () => {
   return (
     <div className="monetary-page">
       <Navbar />
-      {/* ... restante do código ... */}
       <form className="donation-form voluntary-form" onSubmit={handleSubmit}>
         <h3>Preencha seus dados para participar</h3>
         <label htmlFor="nome">Nome Completo</label>
@@ -90,6 +89,18 @@ const Voluntary: React.FC = () => {
           <option value="semanal">Algumas horas por semana</option>
           <option value="eventos">Apenas para eventos específicos</option>
           <option value="integral">Tempo integral</option>
+        </select>
+        <label htmlFor="tipo_sanguineo">Tipo Sanguíneo</label>
+        <select id="tipo_sanguineo" required>
+          <option value="">Selecione</option>
+          <option value="A+">A+</option>
+          <option value="A-">A-</option>
+          <option value="B+">B+</option>
+          <option value="B-">B-</option>
+          <option value="AB+">AB+</option>
+          <option value="AB-">AB-</option>
+          <option value="O+">O+</option>
+          <option value="O-">O-</option>
         </select>
         <label htmlFor="experiencia">Experiência Anterior (opcional)</label>
         <textarea id="experiencia" rows={3}></textarea>
