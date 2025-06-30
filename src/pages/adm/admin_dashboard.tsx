@@ -47,7 +47,7 @@ const AdminDashboard = () => {
   // Verifica se o admin está logado
   useEffect(() => {
     if (!token) {
-      navigate('/admin/login');
+      navigate('/login-admin');
       return;
     }
     
@@ -61,14 +61,14 @@ const AdminDashboard = () => {
       .then(res => {
         if (!res.ok) {
           localStorage.removeItem('jwtToken');
-          navigate('/admin/login');
+          navigate('/login-admin');
           throw new Error('Sessão expirada ou inválida.');
         }
         setIsLoading(false);
         return res.json();
       })
       .catch(() => {
-        navigate('/admin/login');
+        navigate('/registro');
       });
   }, [navigate, apiUrl, token]);
 
