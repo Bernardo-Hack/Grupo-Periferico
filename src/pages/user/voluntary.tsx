@@ -14,7 +14,6 @@ const Voluntary: React.FC = () => {
 
     const voluntaryName = (document.getElementById('nome') as HTMLInputElement)?.value;
     const voluntaryEmail = (document.getElementById('email') as HTMLInputElement)?.value;
-    const voluntaryAge = (document.getElementById('idade') as HTMLInputElement)?.value;
     const voluntaryAviability = (document.getElementById('disponibilidade') as HTMLInputElement)?.value;
     const voluntaryExperience = (document.getElementById('experiencia') as HTMLInputElement)?.value;
 
@@ -30,7 +29,6 @@ const Voluntary: React.FC = () => {
         body: JSON.stringify({
           nome: voluntaryName,
           email: voluntaryEmail,
-          idade: voluntaryAge,
           disponibilidade: voluntaryAviability,
           experiencia: voluntaryExperience,
         })
@@ -78,12 +76,13 @@ const Voluntary: React.FC = () => {
       {/* ... restante do código ... */}
       <form className="donation-form voluntary-form" onSubmit={handleSubmit}>
         <h3>Preencha seus dados para participar</h3>
+
         <label htmlFor="nome">Nome Completo</label>
         <input type="text" id="nome" required />
+
         <label htmlFor="email">E-mail</label>
         <input type="email" id="email" required />
-        <label htmlFor="idade">Idade</label>
-        <input type="number" id="idade" required />
+
         <label htmlFor="disponibilidade">Disponibilidade</label>
         <select id="disponibilidade" required>
           <option value="">Selecione</option>
@@ -91,8 +90,10 @@ const Voluntary: React.FC = () => {
           <option value="eventos">Apenas para eventos específicos</option>
           <option value="integral">Tempo integral</option>
         </select>
+
         <label htmlFor="experiencia">Experiência Anterior (opcional)</label>
         <textarea id="experiencia" rows={3}></textarea>
+        
         <button type="submit" className="submit-donation">
           Tornar-se Voluntário
         </button>

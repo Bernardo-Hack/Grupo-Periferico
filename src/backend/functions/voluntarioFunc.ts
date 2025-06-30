@@ -47,8 +47,8 @@ export const registerVoluntary = async (req: AuthRequest, res: Response, next: N
     }
 
     const insertSQL = `
-      INSERT INTO voluntario (nome, email, idade, disponibilidade, experiencia, data_cadastro)
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO voluntario (nome, email, disponibilidade, experiencia, data_cadastro)
+      VALUES ($1, $2, $3, $4, NOW())
     `;
     
     // CORREÇÃO 3: Ordem dos parâmetros no array corrigida para bater com a query
